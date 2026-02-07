@@ -1,0 +1,23 @@
+# Дедлайны для курса CUDA (notmanytask)
+# Формат v2
+
+scoring:
+  policies:
+  - name: default
+    kind: exp
+    spec:
+      multiplier: 120h   # 5 дней
+      threshold: 0.3
+  groups:
+  - name: default
+    weight: 10.0
+    policy: default
+  defaultGroup: default
+
+assignments:
+- title: Hello World
+  start:    01-02-2026 00:00
+  deadline: 31-12-2026 23:59
+  tasks:
+    - task: 00-hello-world
+      score: 100
