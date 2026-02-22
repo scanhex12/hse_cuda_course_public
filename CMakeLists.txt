@@ -25,6 +25,7 @@ function(add_if_exists name)
 endfunction()
 
 add_if_exists(00-hello-world)
+add_if_exists(01-fibonacci)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/private)
   add_subdirectory(private)

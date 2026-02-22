@@ -16,8 +16,10 @@ scoring:
 
 assignments:
 - title: Hello World
-  start:    01-02-2026 00:00
-  deadline: 31-12-2026 23:59
+  start:    10-02-2026 00:00
+  deadline: 24-02-2026 23:59
   tasks:
     - task: 00-hello-world
+      score: 100
+    - task: 01-fibonacci
       score: 100

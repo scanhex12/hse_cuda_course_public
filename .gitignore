@@ -11,6 +11,9 @@ build/
 *.swp
 *~
 
+# submit.py shadow repo
+.submit-repo/
+
 # CMake
 CMakeCache.txt
 CMakeFiles/
