@@ -1,12 +1,12 @@
+#include "vector.cuh"
 #include <cmath>
 #include <vector>
-#include "vector.cuh"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/generators/catch_generators.hpp>
+#include <catch2/matchers/catch_matchers.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <catch2/matchers/catch_matchers_templated.hpp>
-#include <catch2/matchers/catch_matchers.hpp>
 
 using Catch::Matchers::WithinAbs;
 
@@ -66,7 +66,8 @@ TEST_CASE("ProxyAssignmentAndRead") {
 
 TEST_CASE("ProxyChainedOps") {
     CudaVector<int> v;
-    for (int i = 0; i < 4; ++i) v.push_back(i);
+    for (int i = 0; i < 4; ++i)
+        v.push_back(i);
 
     int x = v[2];
     REQUIRE(x == 2);
@@ -159,7 +160,8 @@ TEST_CASE("CopyFromHost") {
 
 TEST_CASE("CopyToHost") {
     CudaVector<float> v;
-    for (int i = 0; i < 7; ++i) v.push_back(float(i + 1));
+    for (int i = 0; i < 7; ++i)
+        v.push_back(float(i + 1));
 
     std::vector<float> host(7);
     v.copy_to_host(host.data());
@@ -168,12 +170,12 @@ TEST_CASE("CopyToHost") {
     }
 }
 
-
 TEST_CASE("MoveConstructor") {
     CudaVector<int> a;
-    for (int i = 0; i < 5; ++i) a.push_back(i);
+    for (int i = 0; i < 5; ++i)
+        a.push_back(i);
 
-    int* original_ptr = a.data();
+    int *original_ptr = a.data();
     size_t original_cap = a.capacity();
 
     CudaVector<int> b(std::move(a));
@@ -189,9 +191,10 @@ TEST_CASE("MoveConstructor") {
 
 TEST_CASE("MoveAssignment") {
     CudaVector<int> a;
-    for (int i = 0; i < 9; ++i) a.push_back(i * 10);
+    for (int i = 0; i < 9; ++i)
+        a.push_back(i * 10);
 
-    int* ptr = a.data();
+    int *ptr = a.data();
     size_t size = a.size();
     size_t cap = a.capacity();
 

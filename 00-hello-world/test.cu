@@ -2,15 +2,13 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <unistd.h>  // dup
+#include <unistd.h>
 
 #include <catch2/catch_test_macros.hpp>
 
-namespace
-{
+namespace {
 
-TEST_CASE("HelloWorldOnGPU")
-{
+TEST_CASE("HelloWorldOnGPU") {
     // Nasty hack to capture CUDA's printf output
     char buffer[1024] = "";
     int backup_stdout = dup(fileno(stdout));
@@ -32,4 +30,4 @@ TEST_CASE("HelloWorldOnGPU")
     REQUIRE(buffer == std::string{"Hello, world!"});
 }
 
-}
+} // namespace

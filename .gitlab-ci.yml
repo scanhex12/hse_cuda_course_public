@@ -2,13 +2,14 @@
   image: nvidia/cuda:12.2.0-devel-ubuntu22.04
   before_script:
     - ls -la /dev/nvidia* || echo "No GPU devices"
-    - apt-get update -qq && apt-get install -y -qq cmake git
+    - apt-get update -qq && apt-get install -y -qq cmake git clang-format
 
 00-hello-world:
   <<: *base
   rules:
     - if: $CI_COMMIT_BRANCH == "submits/00-hello-world"
   script:
+    - find . \( -name "*.cu" -o -name "*.cuh" \) -print0 | xargs -0 clang-format --dry-run -Werror
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target test_hello_world
@@ -19,6 +20,7 @@
   rules:
     - if: $CI_COMMIT_BRANCH == "submits/01-fibonacci"
   script:
+    - find . \( -name "*.cu" -o -name "*.cuh" \) -print0 | xargs -0 clang-format --dry-run -Werror
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target test_fibonacci
@@ -29,6 +31,7 @@
   rules:
     - if: $CI_COMMIT_BRANCH == "submits/02-binary-image"
   script:
+    - find . \( -name "*.cu" -o -name "*.cuh" \) -print0 | xargs -0 clang-format --dry-run -Werror
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target test_binary_image
@@ -41,6 +44,7 @@
   rules:
     - if: $CI_COMMIT_BRANCH == "submits/03-tree"
   script:
+    - find . \( -name "*.cu" -o -name "*.cuh" \) -print0 | xargs -0 clang-format --dry-run -Werror
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target test_tree
@@ -53,6 +57,7 @@
   rules:
     - if: $CI_COMMIT_BRANCH == "submits/04-vector"
   script:
+    - find . \( -name "*.cu" -o -name "*.cuh" \) -print0 | xargs -0 clang-format --dry-run -Werror
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target test_vector
