@@ -23,3 +23,14 @@ assignments:
       score: 100
     - task: 01-fibonacci
       score: 100
+
+- title: Memory
+  start:    25-02-2026 00:00
+  deadline: 15-03-2026 23:59
+  tasks:
+    - task: 02-binary-image
+      score: 100
+    - task: 03-tree
+      score: 100
+    - task: 04-vector
+      score: 100

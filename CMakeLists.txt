@@ -26,6 +26,9 @@ endfunction()
 
 add_if_exists(00-hello-world)
 add_if_exists(01-fibonacci)
+add_if_exists(02-binary-image)
+add_if_exists(03-tree)
+add_if_exists(04-vector)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/private)
   add_subdirectory(private)

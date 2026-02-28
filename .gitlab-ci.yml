@@ -23,3 +23,39 @@
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target test_fibonacci
     - ./test_fibonacci
+
+02-binary-image:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/02-binary-image"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . --target test_binary_image
+    - ./test_binary_image
+    - cmake --build . --target benchmark_binary_image
+    - ./benchmark_binary_image
+
+03-tree:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/03-tree"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . --target test_tree
+    - ./test_tree
+    - cmake --build . --target benchmark_tree
+    - ./benchmark_tree
+
+04-vector:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/04-vector"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . --target test_vector
+    - ./test_vector
+    - cmake --build . --target benchmark_vector
+    - ./benchmark_vector
