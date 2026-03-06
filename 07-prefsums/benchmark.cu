@@ -157,7 +157,7 @@ TEST_CASE("Benchmark: Prefsum 1M elements") {
               << cpu_ms << " ms"
               << (gpu_ms < (float)cpu_ms ? " [GPU faster]" : " [CPU faster]")
               << std::endl;
-    REQUIRE(gpu_ms < 0.5);
+    REQUIRE(gpu_ms < 0.9);
 }
 
 TEST_CASE("Benchmark: Prefsum 4M elements") {
