@@ -59,3 +59,39 @@
     - ./test_vector
     - cmake --build . --target benchmark_vector
     - ./benchmark_vector
+
+05-transpose:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/05-transpose"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . --target test_transpose
+    - ./test_transpose
+    - cmake --build . --target benchmark_transpose
+    - ./benchmark_transpose
+
+06-gemm-v0:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/06-gemm-v0"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . --target test_gemm_v0
+    - ./test_gemm_v0
+    - cmake --build . --target benchmark_gemm_v0
+    - ./benchmark_gemm_v0
+
+07-prefsums:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/07-prefsums"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . --target test_prefsums
+    - ./test_prefsums
+    - cmake --build . --target benchmark_prefsums
+    - ./benchmark_prefsums
