@@ -7,6 +7,28 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+static void select_least_loaded_gpu() {
+    int ndev = 0;
+    if (cudaGetDeviceCount(&ndev) != cudaSuccess || ndev <= 0) {
+        return;
+    }
+    size_t best_free = 0;
+    int best = 0;
+    for (int i = 0; i < ndev; ++i) {
+        if (cudaSetDevice(i) != cudaSuccess) {
+            continue;
+        }
+        size_t free_mem = 0;
+        size_t total = 0;
+        if (cudaMemGetInfo(&free_mem, &total) == cudaSuccess &&
+            free_mem > best_free) {
+            best_free = free_mem;
+            best = i;
+        }
+    }
+    cudaSetDevice(best);
+}
+
 static void transpose_cpu(const float *in, float *out, int rows, int cols) {
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
@@ -50,6 +72,7 @@ static bool run_test(size_t rows, size_t cols) {
 }
 
 TEST_CASE("Matrix transpose") {
+    select_least_loaded_gpu();
     REQUIRE(run_test(1, 1));
     REQUIRE(run_test(1, 100));
     REQUIRE(run_test(100, 1));

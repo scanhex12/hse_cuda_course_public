@@ -8,6 +8,28 @@
 #include <random>
 #include <vector>
 
+static void select_least_loaded_gpu() {
+    int ndev = 0;
+    if (cudaGetDeviceCount(&ndev) != cudaSuccess || ndev <= 0) {
+        return;
+    }
+    size_t best_free = 0;
+    int best = 0;
+    for (int i = 0; i < ndev; ++i) {
+        if (cudaSetDevice(i) != cudaSuccess) {
+            continue;
+        }
+        size_t free_mem = 0;
+        size_t total = 0;
+        if (cudaMemGetInfo(&free_mem, &total) == cudaSuccess &&
+            free_mem > best_free) {
+            best_free = free_mem;
+            best = i;
+        }
+    }
+    cudaSetDevice(best);
+}
+
 template <typename GemmFn>
 static float run_benchmark(int M, int K, int N, GemmFn gemm_fn) {
     std::mt19937 gen(42);
@@ -73,6 +95,7 @@ static float run_benchmark(int M, int K, int N, GemmFn gemm_fn) {
 }
 
 TEST_CASE("Benchmark on 4096x4096x4096") {
+    select_least_loaded_gpu();
     int N = 4096;
     auto fn = [N](float *d_A, float *d_B, float *d_C) {
         gemm_cuda(1.0f, d_A, d_B, 0.0f, d_C, N, N, N);

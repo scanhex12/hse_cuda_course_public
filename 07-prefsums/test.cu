@@ -11,6 +11,29 @@
 
 using Catch::Matchers::WithinAbs;
 
+static void select_least_loaded_gpu() {
+    int ndev = 0;
+    if (cudaGetDeviceCount(&ndev) != cudaSuccess || ndev <= 0) {
+        return;
+    }
+    size_t best_free = 0;
+    int best = 0;
+    for (int i = 0; i < ndev; ++i) {
+        if (cudaSetDevice(i) != cudaSuccess) {
+            continue;
+        }
+        size_t free_mem = 0;
+        size_t total = 0;
+        if (cudaMemGetInfo(&free_mem, &total) == cudaSuccess &&
+            free_mem > best_free) {
+            best_free = free_mem;
+            best = i;
+        }
+    }
+    cudaSetDevice(best);
+}
+
+
 static std::vector<float> cpu_exclusive_scan_float(const std::vector<float> &in) {
     std::vector<float> out(in.size());
     float acc = 0.0f;
@@ -79,6 +102,7 @@ static std::vector<float> make_random_floats(int n, float lo = -5.0f,
 }
 
 TEST_CASE("Prefsum") {
+    select_least_loaded_gpu();
     {
         std::vector<float> v0;
         REQUIRE(run_one_test(v0, "empty"));
