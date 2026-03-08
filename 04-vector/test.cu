@@ -10,13 +10,37 @@
 
 using Catch::Matchers::WithinAbs;
 
+static void select_least_loaded_gpu() {
+    int ndev = 0;
+    if (cudaGetDeviceCount(&ndev) != cudaSuccess || ndev <= 0) {
+        return;
+    }
+    size_t best_free = 0;
+    int best = 0;
+    for (int i = 0; i < ndev; ++i) {
+        if (cudaSetDevice(i) != cudaSuccess) {
+            continue;
+        }
+        size_t free_mem = 0;
+        size_t total = 0;
+        if (cudaMemGetInfo(&free_mem, &total) == cudaSuccess &&
+            free_mem > best_free) {
+            best_free = free_mem;
+            best = i;
+        }
+    }
+    cudaSetDevice(best);
+}
+
 TEST_CASE("InitialState") {
+    select_least_loaded_gpu();
     CudaVector<float> v;
     REQUIRE(v.size() == 0);
     REQUIRE(v.capacity() == 0);
 }
 
 TEST_CASE("ReserveIncreasesCapacity") {
+    select_least_loaded_gpu();
     CudaVector<int> v;
     v.reserve(10);
     REQUIRE(v.capacity() == 10);
@@ -24,6 +48,7 @@ TEST_CASE("ReserveIncreasesCapacity") {
 }
 
 TEST_CASE("PushBackGrowsSize") {
+    select_least_loaded_gpu();
     CudaVector<float> v;
     v.push_back(1.5f);
     v.push_back(2.5f);
@@ -34,6 +59,7 @@ TEST_CASE("PushBackGrowsSize") {
 }
 
 TEST_CASE("PushBackTriggersRealloc") {
+    select_least_loaded_gpu();
     CudaVector<int> v;
     for (int i = 0; i < 16; ++i) {
         v.push_back(i);
@@ -46,6 +72,7 @@ TEST_CASE("PushBackTriggersRealloc") {
 }
 
 TEST_CASE("SetAndGet") {
+    select_least_loaded_gpu();
     CudaVector<double> v(5);
     for (size_t i = 0; i < 5; ++i) {
         v.set(i, i * 10.0);
@@ -56,6 +83,7 @@ TEST_CASE("SetAndGet") {
 }
 
 TEST_CASE("ProxyAssignmentAndRead") {
+    select_least_loaded_gpu();
     CudaVector<float> v;
     v.push_back(10.0f);
     v.push_back(20.0f);
@@ -65,6 +93,7 @@ TEST_CASE("ProxyAssignmentAndRead") {
 }
 
 TEST_CASE("ProxyChainedOps") {
+    select_least_loaded_gpu();
     CudaVector<int> v;
     for (int i = 0; i < 4; ++i)
         v.push_back(i);
@@ -77,6 +106,7 @@ TEST_CASE("ProxyChainedOps") {
 }
 
 TEST_CASE("OutOfRangeGetThrows") {
+    select_least_loaded_gpu();
     CudaVector<int> v;
     v.reserve(2);
     v.push_back(1);
@@ -85,17 +115,20 @@ TEST_CASE("OutOfRangeGetThrows") {
 }
 
 TEST_CASE("OutOfRangeSetThrows") {
+    select_least_loaded_gpu();
     CudaVector<int> v(3);
     REQUIRE_THROWS_AS(v.set(10, 42), std::out_of_range);
 }
 
 TEST_CASE("BracketOutOfRangeThrows") {
+    select_least_loaded_gpu();
     CudaVector<float> v;
     v.push_back(1.0f);
     REQUIRE_THROWS_AS(v[3] = 2.0f, std::out_of_range);
 }
 
 TEST_CASE("ElementwiseAdd") {
+    select_least_loaded_gpu();
     CudaVector<int> a, b;
     for (int i = 0; i < 5; ++i) {
         a.push_back(i);
@@ -109,6 +142,7 @@ TEST_CASE("ElementwiseAdd") {
 }
 
 TEST_CASE("ElementwiseSub") {
+    select_least_loaded_gpu();
     CudaVector<int> a, b;
     for (int i = 0; i < 5; ++i) {
         a.push_back(i * 3);
@@ -122,6 +156,7 @@ TEST_CASE("ElementwiseSub") {
 }
 
 TEST_CASE("ElementwiseMul") {
+    select_least_loaded_gpu();
     CudaVector<float> a, b;
     for (int i = 1; i <= 6; ++i) {
         a.push_back(float(i));
@@ -135,6 +170,7 @@ TEST_CASE("ElementwiseMul") {
 }
 
 TEST_CASE("ElementwiseDiv") {
+    select_least_loaded_gpu();
     CudaVector<float> a, b;
     for (int i = 1; i <= 4; ++i) {
         a.push_back(float(i * 2));
@@ -148,6 +184,7 @@ TEST_CASE("ElementwiseDiv") {
 }
 
 TEST_CASE("CopyFromHost") {
+    select_least_loaded_gpu();
     std::vector<int> host{1, 2, 3, 4, 5};
     CudaVector<int> v;
     v.copy_from_host(host.data(), host.size());
@@ -159,6 +196,7 @@ TEST_CASE("CopyFromHost") {
 }
 
 TEST_CASE("CopyToHost") {
+    select_least_loaded_gpu();
     CudaVector<float> v;
     for (int i = 0; i < 7; ++i)
         v.push_back(float(i + 1));
@@ -171,6 +209,7 @@ TEST_CASE("CopyToHost") {
 }
 
 TEST_CASE("MoveConstructor") {
+    select_least_loaded_gpu();
     CudaVector<int> a;
     for (int i = 0; i < 5; ++i)
         a.push_back(i);
@@ -190,6 +229,7 @@ TEST_CASE("MoveConstructor") {
 }
 
 TEST_CASE("MoveAssignment") {
+    select_least_loaded_gpu();
     CudaVector<int> a;
     for (int i = 0; i < 9; ++i)
         a.push_back(i * 10);
@@ -211,6 +251,7 @@ TEST_CASE("MoveAssignment") {
 }
 
 TEST_CASE("ElementwiseSizeMismatchThrows") {
+    select_least_loaded_gpu();
     CudaVector<int> a, b;
     a.push_back(1);
     a.push_back(2);

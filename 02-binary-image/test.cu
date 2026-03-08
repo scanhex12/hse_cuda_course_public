@@ -22,6 +22,28 @@
 
 namespace {
 
+static void select_least_loaded_gpu() {
+    int ndev = 0;
+    if (cudaGetDeviceCount(&ndev) != cudaSuccess || ndev <= 0) {
+        return;
+    }
+    size_t best_free = 0;
+    int best = 0;
+    for (int i = 0; i < ndev; ++i) {
+        if (cudaSetDevice(i) != cudaSuccess) {
+            continue;
+        }
+        size_t free_mem = 0;
+        size_t total = 0;
+        if (cudaMemGetInfo(&free_mem, &total) == cudaSuccess &&
+            free_mem > best_free) {
+            best_free = free_mem;
+            best = i;
+        }
+    }
+    cudaSetDevice(best);
+}
+    
 Matrix createMatrixFromVector(const std::vector<std::vector<int>> &src) {
     auto matrix = allocMatrixHost(src.size(), src.empty() ? 0 : src[0].size());
     for (size_t i = 0; i < src.size(); ++i) {
@@ -34,6 +56,7 @@ Matrix createMatrixFromVector(const std::vector<std::vector<int>> &src) {
 
 void testCase(const std::vector<std::vector<int>> &src,
               const std::vector<std::vector<int>> &expected_result) {
+    select_least_loaded_gpu();
     auto matrix = createMatrixFromVector(src);
     auto result = solve(matrix);
     for (size_t i = 0; i < expected_result.size(); ++i) {
