@@ -11,7 +11,7 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_hello_world
+    - cmake --build . -j16 --target test_hello_world
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_hello_world
 
 01-fibonacci:
@@ -21,7 +21,7 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_fibonacci
+    - cmake --build . -j16 --target test_fibonacci
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_fibonacci
 
 02-binary-image:
@@ -31,9 +31,9 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_binary_image
+    - cmake --build . -j16 --target test_binary_image
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_binary_image
-    - cmake --build . --target benchmark_binary_image
+    - cmake --build . -j16 --target benchmark_binary_image
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_binary_image
 
 03-tree:
@@ -43,9 +43,9 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_tree
+    - cmake --build . -j16 --target test_tree
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_tree
-    - cmake --build . --target benchmark_tree
+    - cmake --build . -j16 --target benchmark_tree
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_tree
 
 04-vector:
@@ -55,9 +55,9 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_vector
+    - cmake --build . -j16 --target test_vector
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_vector
-    - cmake --build . --target benchmark_vector
+    - cmake --build . -j16 --target benchmark_vector
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_vector
 
 05-transpose:
@@ -67,9 +67,9 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_transpose
+    - cmake --build . -j16 --target test_transpose
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_transpose
-    - cmake --build . --target benchmark_transpose
+    - cmake --build . -j16 --target benchmark_transpose
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_transpose
 
 06-gemm-v0:
@@ -79,9 +79,9 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_gemm_v0
+    - cmake --build . -j16 --target test_gemm_v0
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_gemm_v0
-    - cmake --build . --target benchmark_gemm_v0
+    - cmake --build . -j16 --target benchmark_gemm_v0
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_gemm_v0
 
 07-prefsums:
@@ -91,7 +91,7 @@
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target test_prefsums
+    - cmake --build . -j16 --target test_prefsums
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_prefsums
-    - cmake --build . --target benchmark_prefsums
+    - cmake --build . -j16 --target benchmark_prefsums
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_prefsums
