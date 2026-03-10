@@ -34,6 +34,7 @@ add_if_exists(04-vector)
 add_if_exists(05-transpose)
 add_if_exists(06-gemm-v0)
 add_if_exists(07-prefsums)
+add_if_exists(08-sort)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/private)
   add_subdirectory(private)
