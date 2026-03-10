@@ -95,3 +95,15 @@
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_prefsums
     - cmake --build . -j16 --target benchmark_prefsums
     - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_prefsums
+
+08-sort:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/08-sort"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_sort
+    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_sort
+    - cmake --build . -j16 --target benchmark_sort
+    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_sort
