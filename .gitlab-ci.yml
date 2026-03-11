@@ -12,7 +12,7 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_hello_world
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_hello_world
+    - ./test_hello_world
 
 01-fibonacci:
   <<: *base
@@ -22,7 +22,7 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_fibonacci
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_fibonacci
+    - ./test_fibonacci
 
 02-binary-image:
   <<: *base
@@ -32,9 +32,9 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_binary_image
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_binary_image
+    - ./test_binary_image
     - cmake --build . -j16 --target benchmark_binary_image
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_binary_image
+    - ./benchmark_binary_image
 
 03-tree:
   <<: *base
@@ -44,9 +44,9 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_tree
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_tree
+    - ./test_tree
     - cmake --build . -j16 --target benchmark_tree
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_tree
+    - ./benchmark_tree
 
 04-vector:
   <<: *base
@@ -56,9 +56,9 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_vector
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_vector
+    - ./test_vector
     - cmake --build . -j16 --target benchmark_vector
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_vector
+    - ./benchmark_vector
 
 05-transpose:
   <<: *base
@@ -68,9 +68,9 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_transpose
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_transpose
+    - ./test_transpose
     - cmake --build . -j16 --target benchmark_transpose
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_transpose
+    - ./benchmark_transpose
 
 06-gemm-v0:
   <<: *base
@@ -80,9 +80,9 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_gemm_v0
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_gemm_v0
+    - ./test_gemm_v0
     - cmake --build . -j16 --target benchmark_gemm_v0
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_gemm_v0
+    - ./benchmark_gemm_v0
 
 07-prefsums:
   <<: *base
@@ -92,9 +92,9 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_prefsums
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_prefsums
+    - ./test_prefsums
     - cmake --build . -j16 --target benchmark_prefsums
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_prefsums
+    - ./benchmark_prefsums
 
 08-sort:
   <<: *base
@@ -104,6 +104,6 @@
     - mkdir build && cd build
     - cmake .. -DCMAKE_BUILD_TYPE=Release
     - cmake --build . -j16 --target test_sort
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./test_sort
+    - ./test_sort
     - cmake --build . -j16 --target benchmark_sort
-    - CUDA_VISIBLE_DEVICES=1,2,3,4,5,6 ./benchmark_sort
+    - ./benchmark_sort
