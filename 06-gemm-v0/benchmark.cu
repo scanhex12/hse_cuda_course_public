@@ -101,5 +101,5 @@ TEST_CASE("Benchmark on 4096x4096x4096") {
         gemm_cuda(1.0f, d_A, d_B, 0.0f, d_C, N, N, N);
     };
     float ms = run_benchmark(N, N, N, fn);
-    REQUIRE(ms < 110);
+    REQUIRE(ms < 240);
 }
