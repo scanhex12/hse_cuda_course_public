@@ -34,8 +34,8 @@
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
-cmake --build . --target test_00_hello_world
-./test_00_hello_world
+cmake --build . --target test_hello_world
+./test_hello_world
 ```
 
 Или из директории задачи (если в ней есть CMake):
