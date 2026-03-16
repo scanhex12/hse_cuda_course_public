@@ -100,10 +100,10 @@ static bool run_gemm_test(int M, int K, int N, float alpha, float beta) {
     std::vector<float> h_B(size_B);
     std::vector<float> h_C(size_C, 1.0f);
     for (size_t i = 0; i < size_A; ++i) {
-        h_A[i] = (float)((i * 7 + 1) % 11 - 5);
+        h_A[i] = rand();
     }
     for (size_t i = 0; i < size_B; ++i) {
-        h_B[i] = (float)((i * 13 + 2) % 7 - 3);
+        h_B[i] = rand();
     }
 
     std::vector<float> ref = h_C;
