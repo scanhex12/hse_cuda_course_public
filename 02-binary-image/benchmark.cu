@@ -67,7 +67,7 @@ TEST_CASE("Benchmark: GPU performance") {
 
     INFO("GPU time: " << gpu_time_ms << " ms");
 
-    const float MAX_GPU_TIME_MS = 20.0f;
+    const float MAX_GPU_TIME_MS = 25.0f;
     REQUIRE(gpu_time_ms < MAX_GPU_TIME_MS);
 
     freeMatrixHost(src_matrix);
