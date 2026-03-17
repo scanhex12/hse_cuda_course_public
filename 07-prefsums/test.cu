@@ -3,6 +3,7 @@
 #include <iostream>
 #include <random>
 #include <vector>
+#include <cuda_helpers.h>
 
 #include "prefsum.cuh"
 
