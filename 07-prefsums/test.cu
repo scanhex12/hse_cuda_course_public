@@ -57,14 +57,14 @@ static bool run_one_test(const std::vector<float> &h_in,
 
     float *d_in = nullptr;
     float *d_out = nullptr;
-    checkStatus(cudaMalloc(&d_in, n * sizeof(float)));
-    checkStatus(cudaMalloc(&d_out, n * sizeof(float)));
-    checkStatus(cudaMemcpy(d_in, h_in.data(), n * sizeof(float),
+    CheckStatus(cudaMalloc(&d_in, n * sizeof(float)));
+    CheckStatus(cudaMalloc(&d_out, n * sizeof(float)));
+    CheckStatus(cudaMemcpy(d_in, h_in.data(), n * sizeof(float),
                           cudaMemcpyHostToDevice));
 
     exclusive_scan_cuda(d_out, d_in, n);
 
-    checkStatus(cudaMemcpy(h_out.data(), d_out, n * sizeof(float),
+    CheckStatus(cudaMemcpy(h_out.data(), d_out, n * sizeof(float),
                           cudaMemcpyDeviceToHost));
 
     bool ok = true;
@@ -84,8 +84,8 @@ static bool run_one_test(const std::vector<float> &h_in,
         std::cout << "[ OK ] " << name << " (n=" << n << ")\n";
     }
 
-    checkStatus(cudaFree(d_in));
-    checkStatus(cudaFree(d_out));
+    CheckStatus(cudaFree(d_in));
+    CheckStatus(cudaFree(d_out));
     return ok;
 }
 
