@@ -1,0 +1,5 @@
+add_catch(test_reduce_flash_attention test.cu attention.cu)
+target_link_libraries(test_reduce_flash_attention PRIVATE hse_cuda::util)
+
+add_catch(benchmark_reduce_flash_attention benchmark.cu attention.cu)
+target_link_libraries(benchmark_reduce_flash_attention PRIVATE hse_cuda::util)
