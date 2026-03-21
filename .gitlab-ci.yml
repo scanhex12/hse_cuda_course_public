@@ -143,3 +143,39 @@
     - ./test_reduce_flash_attention
     - cmake --build . -j16 --target benchmark_reduce_flash_attention
     - ./benchmark_reduce_flash_attention
+
+12-tensorcores:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/12-tensorcores"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_lu_decomposition
+    - ./test_lu_decomposition
+    - cmake --build . -j16 --target benchmark_lu_decomposition
+    - ./benchmark_lu_decomposition
+
+13-streaming-vad:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/13-streaming-vad"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_streaming_vad
+    - ./test_streaming_vad
+    - cmake --build . -j16 --target benchmark_streaming_vad
+    - ./benchmark_streaming_vad
+
+14-db:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/14-db"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_db
+    - ./test_db
+    - cmake --build . -j16 --target benchmark_db
+    - ./benchmark_db
