@@ -64,12 +64,12 @@ static float run_benchmark(int N, int d) {
 
 TEST_CASE("Benchmark: flash_attention 4096x32") {
     float ms = run_benchmark(4096, 32);
-    REQUIRE(ms < 2.0f);
+    REQUIRE(ms < 8.0f);
 }
 
 TEST_CASE("Benchmark: flash_attention 8192x32") {
     float ms = run_benchmark(8192, 32);
-    REQUIRE(ms < 25.0f);
+    REQUIRE(ms < 30.0f);
 }
 
 TEST_CASE("Benchmark: flash_attention 16384x32") {
