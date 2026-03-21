@@ -107,3 +107,39 @@
     - ./test_sort
     - cmake --build . -j16 --target benchmark_sort
     - ./benchmark_sort
+
+09-reduce-norm:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/09-reduce-norm"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_reduce_norm
+    - ./test_reduce_norm
+    - cmake --build . -j16 --target benchmark_reduce_norm
+    - ./benchmark_reduce_norm
+
+10-moe-selection:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/10-moe-selection"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_moe_selection
+    - ./test_moe_selection
+    - cmake --build . -j16 --target benchmark_moe_selection
+    - ./benchmark_moe_selection
+
+11-reduce-flash-attention:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/11-reduce-flash-attention"
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=Release
+    - cmake --build . -j16 --target test_reduce_flash_attention
+    - ./test_reduce_flash_attention
+    - cmake --build . -j16 --target benchmark_reduce_flash_attention
+    - ./benchmark_reduce_flash_attention
