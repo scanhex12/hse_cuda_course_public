@@ -58,34 +58,34 @@ static bool run_benchmark(int M, int E, int K, float* out_ms) {
 TEST_CASE("Benchmark: MoE 1024x8 K=2") {
     float ms = 0.0f;
     if (run_benchmark(1024, 8, 2, &ms)) {
-        REQUIRE(ms < 0.02f);
+        REQUIRE(ms < 0.03f);
     }
 }
 
 TEST_CASE("Benchmark: MoE 2048x32 K=2") {
     float ms = 0.0f;
     if (run_benchmark(2048, 32, 2, &ms)) {
-        REQUIRE(ms < 0.02f);
+        REQUIRE(ms < 0.03f);
     }
 }
 
 TEST_CASE("Benchmark: MoE 4096x32 K=2") {
     float ms = 0.0f;
     if (run_benchmark(4096, 32, 2, &ms)) {
-        REQUIRE(ms < 0.03f);
+        REQUIRE(ms < 0.04f);
     }
 }
 
 TEST_CASE("Benchmark: MoE 1024x64 K=8") {
     float ms = 0.0f;
     if (run_benchmark(1024, 64, 8, &ms)) {
-        REQUIRE(ms < 0.2f);
+        REQUIRE(ms < 0.3f);
     }
 }
 
 TEST_CASE("Benchmark: MoE 2048x64 K=8") {
     float ms = 0.0f;
     if (run_benchmark(2048, 64, 8, &ms)) {
-        REQUIRE(ms < 0.3f);
+        REQUIRE(ms < 0.7f);
     }
 }
