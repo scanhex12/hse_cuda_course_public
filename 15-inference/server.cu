@@ -146,7 +146,6 @@ class InferenceServiceImpl final
 };
 
 void runServer(int port, const std::string &onnx_file) {
-    checkCuda();
     std::cerr << "Loading engine..." << std::endl;
     auto engine = loadEngine(onnx_file);
     if (!engine->engine) {
