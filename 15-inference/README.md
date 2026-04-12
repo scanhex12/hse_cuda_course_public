@@ -48,3 +48,10 @@
 | `class_index` | `int32` | индекс класса |
 | `score` | `float` | score / logit |
 
+## Setup
+
+Для задачи необходимо будет скачать архив TensorRT
+
+```
+curl -L --fail --retry 3 --retry-delay 5 -o TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz "https://developer.nvidia.com/downloads/compute/machine-learning/tensorrt/10.4.0/tars/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz"
+```

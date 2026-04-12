@@ -1,8 +1,21 @@
 if(NOT DEFINED TENSORRT_ROOT AND DEFINED ENV{TENSORRT_ROOT})
   set(TENSORRT_ROOT "$ENV{TENSORRT_ROOT}")
 endif()
+if(TENSORRT_ROOT AND NOT EXISTS "${TENSORRT_ROOT}/include/NvInfer.h")
+  unset(TENSORRT_ROOT CACHE)
+  unset(TENSORRT_ROOT)
+endif()
+if(NOT TENSORRT_ROOT)
+  file(GLOB _TRT_LOCAL LIST_DIRECTORIES true "${CMAKE_CURRENT_LIST_DIR}/TensorRT-*")
+  foreach(_d IN LISTS _TRT_LOCAL)
+    if(IS_DIRECTORY "${_d}" AND EXISTS "${_d}/include/NvInfer.h")
+      set(TENSORRT_ROOT "${_d}" CACHE PATH "TensorRT root (15-inference/TensorRT-*)" FORCE)
+      break()
+    endif()
+  endforeach()
+endif()
 if(NOT TENSORRT_ROOT OR NOT EXISTS "${TENSORRT_ROOT}/include/NvInfer.h")
-  message(STATUS "15-inference: TENSORRT_ROOT not set or invalid; skipping (export TENSORRT_ROOT=/path/to/TensorRT-*)")
+  message(STATUS "15-inference: TENSORRT_ROOT not set or invalid; skipping (unpack TensorRT to ${CMAKE_CURRENT_LIST_DIR}/TensorRT-* or export TENSORRT_ROOT=...)")
   return()
 endif()
 
@@ -71,6 +84,9 @@ if(Protobuf_FOUND AND gRPC_FOUND AND GRPC_CPP_PLUGIN_EXECUTABLE AND _PROTOC_CMD)
     INSTALL_RPATH "${TENSORRT_LIBRARY_DIR}"
     BUILD_RPATH_USE_ORIGIN TRUE
   )
+  # TensorRT 10 headers use deprecated APIs internally; -Wextra hits unused params in inline defaults.
+  target_compile_options(trt_server PRIVATE
+    "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:--compiler-options -Wno-error=deprecated-declarations,-Wno-error=unused-parameter>")
 else()
   if(NOT Protobuf_FOUND)
     message(STATUS "15-inference: Protobuf not found; trt_server skipped (apt: libprotobuf-dev protobuf-compiler)")
