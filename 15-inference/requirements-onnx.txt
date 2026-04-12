@@ -1,0 +1,3 @@
+# Для onnx_model.py
+torch>=2.0
+torchvision>=0.15

@@ -1,0 +1,9 @@
+# Клиенты client.py / client_benchmark.py
+grpcio>=1.50
+protobuf>=4.21,<7
+numpy>=1.20
+pillow>=9.0
+
+# Для перегенерации inference_pb2.py при изменении inference.proto:
+# pip install grpcio-tools
+#   python -m grpc_tools.protoc -I. --python_out=. inference.proto

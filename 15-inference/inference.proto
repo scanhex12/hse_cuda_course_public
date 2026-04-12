@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package trt.inference.v1;
+
+// Запрос: сырое RGB изображение (размер rgb_image = width * height * 3).
+message InferRequest {
+  int32 width = 1;   // ширина в пикселях
+  int32 height = 2;  // высота в пикселях
+  // Подряд идущие байты RGB: height строк по width * 3 байт (row-major).
+  bytes rgb_image = 3;
+}
+
+// Один элемент топ-K предсказания.
+message ClassPrediction {
+  int32 class_index = 1;
+  float score = 2;
+}
+
+message InferResponse {
+  // Ровно 5 элементов, по убыванию score (как в прежнем бинарном ответе).
+  repeated ClassPrediction top5 = 1;
+}
+
+service InferenceService {
+  rpc Classify(InferRequest) returns (InferResponse);
+}
