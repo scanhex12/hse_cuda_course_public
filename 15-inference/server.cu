@@ -2,14 +2,15 @@
 #include <NvOnnxParser.h>
 #include <cuda_helpers.h>
 #include <cuda_runtime.h>
-#include "logging.cuh"
 
 #include <grpcpp/grpcpp.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <mutex>
+#include <numeric>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -21,19 +22,6 @@ using namespace nvinfer1;
 
 template <typename T>
 using TrtUniquePtr = std::unique_ptr<T>;
-
-void checkCuda() {
-  int count = 0;
-  cudaError_t st = cudaGetDeviceCount(&count);
-  std::cerr << "cudaGetDeviceCount status=" << int(st) << " (" << cudaGetErrorString(st) << ") count=" << count << "\n";
-  if (st == cudaSuccess && count > 0) {
-    int dev = 0;
-    cudaGetDevice(&dev);
-    cudaDeviceProp prop{};
-    cudaGetDeviceProperties(&prop, dev);
-    std::cerr << "Default GPU: " << prop.name << "\n";
-  }
-}
 
 struct InferenceEngine {
   TrtUniquePtr<IRuntime> runtime;
@@ -155,7 +143,7 @@ void runServer(int port, const std::string& onnx_file) {
   std::cerr << "Loading engine..." << std::endl;
   auto engine = loadEngine(onnx_file);
   if (!engine->engine) {
-    throw std::runtime_error("TODO: loadEngine — десериализация и заполнение InferenceEngine (см. README)");
+    throw std::runtime_error("Engine is null after loadEngine");
   }
 
   auto ctx = createThreadContext(engine.get());
