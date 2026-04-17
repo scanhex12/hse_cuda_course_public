@@ -105,3 +105,10 @@
 Paper: https://arxiv.org/pdf/2205.14135
 
 1. Flash attention v1/v2/v3/v4
+
+## Intro to DL
+
+1. Сверточные сети
+2. Трансформеры
+3. Квантизация/дистилляция/прунинг
+4. GPTQ
