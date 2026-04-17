@@ -50,6 +50,7 @@
 
 1. Reduce - постановка задачи
 2. Warp-level инструкции (__shfl_*_sync)
+3. Roofline model
 
 ## Week 6
 
@@ -107,6 +108,8 @@ Paper: https://arxiv.org/pdf/2205.14135
 1. Flash attention v1/v2/v3/v4
 
 ## Intro to DL
+
+Презентация: https://docs.google.com/presentation/d/1JU5Wp62QnDSFWW3fhhJXytvTFvrYWsA2OTLA6ZWBOYU/edit?usp=sharing
 
 1. Сверточные сети
 2. Трансформеры
