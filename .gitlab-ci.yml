@@ -185,7 +185,7 @@
   rules:
     - if: $CI_COMMIT_BRANCH == "submits/15-inference"
   variables:
-    TENSORRT_TAR: "/home/konstantin/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz"
+    TENSORRT_TAR: "/home/gitlab-runner/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz"
   before_script:
     - ls -la /dev/nvidia* || echo "No GPU devices"
     - |
