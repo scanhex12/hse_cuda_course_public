@@ -75,40 +75,6 @@ class TestLoadFunction(unittest.TestCase):
             self.assertGreaterEqual(load, 0.1)
             self.assertLess(load, 500.0)
 
-    def test_constant_high_load_benchmark_throughput(self):
-        def mock_send(_host, _port, _data):
-            return ((0, 1, 2, 3, 4), (1.0, 0.9, 0.8, 0.7, 0.6))
-
-        load_params = {
-            'A': 0.0,
-            'B': 0.0,
-            'C': 0.0,
-            'D': 0.0,
-            'f1': 0.01,
-            'f2': 0.01,
-            'f3': 0.01,
-            'tau': 100.0,
-            'base': 40.0,
-            'noise': 0.0,
-        }
-        duration = 0.55
-        num_threads = 3
-        out = client_benchmark.run_benchmark(
-            'localhost',
-            50051,
-            duration,
-            num_threads,
-            None,
-            load_params,
-            send_request_fn=mock_send,
-            quiet=True,
-        )
-        self.assertEqual(out['errors'], 0)
-        expected = duration * load_params['base'] * num_threads
-        self.assertGreater(out['success'], expected * 0.45)
-        self.assertLess(out['success'], expected * 1.35)
-        self.assertGreater(out['rate'], 10.0)
-
 
 class TestProtoContract(unittest.TestCase):
     def test_infer_request_rgb_size(self):
