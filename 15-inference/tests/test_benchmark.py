@@ -61,6 +61,7 @@ class TestBenchmarkServerE2E(unittest.TestCase):
             0,
             msg='no successful requests — server unreachable or failing immediately',
         )
+        print(out)
         self.assertLess(
             out['avg_latency_s'],
             max_avg_s,
