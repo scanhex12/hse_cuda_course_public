@@ -9,8 +9,8 @@ if str(_TASK_ROOT) not in sys.path:
 
 import client_benchmark
 
-_AUTHOR_REF_AVG_LATENCY_S = 0.0095
-_AUTHOR_REF_MAX_LATENCY_S = 0.0185
+_AUTHOR_REF_AVG_LATENCY_S = 0.0005
+_AUTHOR_REF_MAX_LATENCY_S = 0.0085
 
 
 def _flat_load_params(base: float) -> dict:
