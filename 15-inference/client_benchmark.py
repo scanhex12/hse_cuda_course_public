@@ -97,24 +97,37 @@ def worker_thread(host, port, images, stats, stop_event, load_func, load_params)
                 stats['success'] += 1
                 request_times.append(elapsed)
                 stats['total_time'] += elapsed
+                stats['max_latency'] = max(stats['max_latency'], elapsed)
+                stats['avg_latency'] = (
+                    stats['total_time'] / stats['success']
+                    if stats['success'] > 0
+                    else 0.0
+                )
+                stats['min_latency'] = min(stats['min_latency'], elapsed)
             else:
                 stats['errors'] += 1
-        
-        if len(request_times) > 0:
-            with stats['lock']:
-                stats['avg_latency'] = sum(request_times) / len(request_times)
-                stats['max_latency'] = max(request_times)
-                stats['min_latency'] = min(request_times)
 
-def benchmark(host, port, duration, num_threads, image_paths, load_params):
-    print(f"Starting benchmark:")
-    print(f"  Host: {host}")
-    print(f"  Port: {port}")
-    print(f"  Duration: {duration}s")
-    print(f"  Threads: {num_threads}")
-    print(f"  Load function parameters: {load_params}")
-    print()
-    
+
+def run_benchmark(
+    host,
+    port,
+    duration,
+    num_threads,
+    image_paths,
+    load_params,
+    *,
+    quiet=False,
+):
+    """Запуск бенчмарка; возвращает агрегаты для тестов (quiet=True без вывода в stdout)."""
+    if not quiet:
+        print("Starting benchmark:")
+        print(f"  Host: {host}")
+        print(f"  Port: {port}")
+        print(f"  Duration: {duration}s")
+        print(f"  Threads: {num_threads}")
+        print(f"  Load function parameters: {load_params}")
+        print()
+
     images = []
     if image_paths:
         for path in image_paths:
@@ -123,10 +136,10 @@ def benchmark(host, port, duration, num_threads, image_paths, load_params):
     else:
         for _ in range(10):
             images.append(generate_random_image())
-    
+
     if not images:
         images = [generate_random_image()]
-    
+
     stats = {
         'success': 0,
         'errors': 0,
@@ -134,60 +147,71 @@ def benchmark(host, port, duration, num_threads, image_paths, load_params):
         'avg_latency': 0.0,
         'max_latency': 0.0,
         'min_latency': float('inf'),
-        'lock': threading.Lock()
+        'lock': threading.Lock(),
     }
-    
+
     stop_event = threading.Event()
     threads = []
-    
+
     start_time = time.time()
     base_time = start_time
-    
+
     def load_func(t, params):
         elapsed = t - base_time
         return load_function(elapsed, params)
-    
-    for i in range(num_threads):
-        t = threading.Thread(target=worker_thread, 
-                           args=(host, port, images, stats, stop_event, load_func, load_params))
+
+    for _ in range(num_threads):
+        t = threading.Thread(
+            target=worker_thread,
+            args=(host, port, images, stats, stop_event, load_func, load_params),
+        )
         t.daemon = True
         t.start()
         threads.append(t)
-    
+
     last_report = start_time
     report_interval = 2.0
-    
+
     try:
         while time.time() - start_time < duration:
             time.sleep(0.1)
-            
+
+            if quiet:
+                continue
+
             current_time = time.time()
             if current_time - last_report >= report_interval:
                 elapsed = current_time - start_time
                 current_load = load_function(elapsed, load_params)
-                
+
                 with stats['lock']:
                     success = stats['success']
                     errors = stats['errors']
-                    total = success + errors
                     rate = success / elapsed if elapsed > 0 else 0
                     avg_lat = stats['avg_latency']
                     max_lat = stats['max_latency']
-                    min_lat = stats['min_latency'] if stats['min_latency'] != float('inf') else 0
-                
-                print(f"[{elapsed:.1f}s] Load: {current_load:.2f} req/s | "
-                      f"Success: {success} | Errors: {errors} | "
-                      f"Rate: {rate:.2f} req/s | "
-                      f"Latency: avg={avg_lat*1000:.1f}ms, min={min_lat*1000:.1f}ms, max={max_lat*1000:.1f}ms")
+                    min_lat = (
+                        stats['min_latency']
+                        if stats['min_latency'] != float('inf')
+                        else 0.0
+                    )
+
+                print(
+                    f"[{elapsed:.1f}s] Load: {current_load:.2f} req/s | "
+                    f"Success: {success} | Errors: {errors} | "
+                    f"Rate: {rate:.2f} req/s | "
+                    f"Latency: avg={avg_lat*1000:.1f}ms, min={min_lat*1000:.1f}ms, max={max_lat*1000:.1f}ms"
+                )
                 last_report = current_time
     except KeyboardInterrupt:
-        print("\nInterrupted by user")
-    
+        if not quiet:
+            print("\nInterrupted by user")
+
     stop_event.set()
     time.sleep(1.0)
-    
+
     final_time = time.time() - start_time
-    
+
     with stats['lock']:
         success = stats['success']
         errors = stats['errors']
@@ -195,22 +219,45 @@ def benchmark(host, port, duration, num_threads, image_paths, load_params):
         rate = success / final_time if final_time > 0 else 0
         avg_lat = stats['avg_latency']
         max_lat = stats['max_latency']
-        min_lat = stats['min_latency'] if stats['min_latency'] != float('inf') else 0
-    
-    print("\n" + "="*60)
-    print("Final Results:")
-    print("="*60)
-    print(f"Duration: {final_time:.2f}s")
-    print(f"Total requests: {total}")
-    print(f"Successful: {success}")
-    print(f"Errors: {errors}")
-    print(f"Success rate: {success/total*100:.2f}%" if total > 0 else "N/A")
-    print(f"Average rate: {rate:.2f} req/s")
-    print(f"Latency statistics:")
-    print(f"  Average: {avg_lat*1000:.2f} ms")
-    print(f"  Min: {min_lat*1000:.2f} ms")
-    print(f"  Max: {max_lat*1000:.2f} ms")
-    print("="*60)
+        min_lat = stats['min_latency'] if stats['min_latency'] != float('inf') else 0.0
+        total_time = stats['total_time']
+
+    if not quiet:
+        print("\n" + "=" * 60)
+        print("Final Results:")
+        print("=" * 60)
+        print(f"Duration: {final_time:.2f}s")
+        print(f"Total requests: {total}")
+        print(f"Successful: {success}")
+        print(f"Errors: {errors}")
+        print(f"Success rate: {success / total * 100:.2f}%" if total > 0 else "N/A")
+        print(f"Average rate: {rate:.2f} req/s")
+        print("Latency statistics:")
+        print(f"  Average: {avg_lat * 1000:.2f} ms")
+        print(f"  Min: {min_lat * 1000:.2f} ms")
+        print(f"  Max: {max_lat * 1000:.2f} ms")
+        print("=" * 60)
+
+    avg_latency_s = (total_time / success) if success > 0 else 0.0
+    max_latency_s = max_lat
+    return {
+        'errors': errors,
+        'success': success,
+        'avg_latency_s': avg_latency_s,
+        'max_latency_s': max_latency_s,
+    }
+
+
+def benchmark(host, port, duration, num_threads, image_paths, load_params):
+    run_benchmark(
+        host,
+        port,
+        duration,
+        num_threads,
+        image_paths,
+        load_params,
+        quiet=False,
+    )
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
