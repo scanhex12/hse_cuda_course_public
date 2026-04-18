@@ -9,6 +9,9 @@ if str(_TASK_ROOT) not in sys.path:
 
 import client_benchmark
 
+_AUTHOR_REF_AVG_LATENCY_S = 0.0095
+_AUTHOR_REF_MAX_LATENCY_S = 0.0185
+
 
 def _flat_load_params(base: float) -> dict:
     return {
@@ -36,8 +39,18 @@ class TestBenchmarkServerE2E(unittest.TestCase):
         duration = float(os.environ.get('INFERENCE_BENCHMARK_DURATION_S', '4'))
         num_threads = int(os.environ.get('INFERENCE_BENCHMARK_THREADS', '3'))
         base = float(os.environ.get('INFERENCE_BENCHMARK_LOAD_BASE', '12.0'))
-        max_avg_s = float(os.environ.get('INFERENCE_BENCHMARK_MAX_AVG_LATENCY_S', '0.8'))
-        max_worst_s = float(os.environ.get('INFERENCE_BENCHMARK_MAX_MAX_LATENCY_S', '25.0'))
+        max_avg_s = float(
+            os.environ.get(
+                'INFERENCE_BENCHMARK_MAX_AVG_LATENCY_S',
+                str(_AUTHOR_REF_AVG_LATENCY_S * 2.0),
+            )
+        )
+        max_worst_s = float(
+            os.environ.get(
+                'INFERENCE_BENCHMARK_MAX_MAX_LATENCY_S',
+                str(_AUTHOR_REF_MAX_LATENCY_S * 2.0),
+            )
+        )
 
         png = _TASK_ROOT / 'image.png'
         image_paths = [str(png)] if png.is_file() else None
@@ -61,7 +74,6 @@ class TestBenchmarkServerE2E(unittest.TestCase):
             0,
             msg='no successful requests — server unreachable or failing immediately',
         )
-        print(out)
         self.assertLess(
             out['avg_latency_s'],
             max_avg_s,
