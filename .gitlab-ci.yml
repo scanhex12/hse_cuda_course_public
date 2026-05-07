@@ -208,20 +208,36 @@
 
         export TENSORRT_ROOT="${CI_PROJECT_DIR}/15-inference/TensorRT-10.4.0.26"
         mkdir -p "${CI_PROJECT_DIR}/15-inference"
-        tar tf "${TENSORRT_TAR}" | awk '
+        TENSORRT_FILE_LIST="${CI_PROJECT_DIR}/15-inference/tensorrt-files.txt"
+
+        echo "TensorRT root not found; scanning tarball for runtime headers/libs..."
+        timeout 5m tar tf "${TENSORRT_TAR}" | awk '
+          {
+            if (NR % 5000 == 0) {
+              printf("Scanned %d TensorRT archive entries...\n", NR) > "/dev/stderr"
+            }
+          }
           /^TensorRT-10\.4\.0\.26\/include(\/|$)/ ||
           /^TensorRT-10\.4\.0\.26\/lib(\/|$)/ ||
           /^TensorRT-10\.4\.0\.26\/targets\/x86_64-linux-gnu\/include(\/|$)/ ||
           /^TensorRT-10\.4\.0\.26\/targets\/x86_64-linux-gnu\/lib(\/|$)/ {
             if ($0 !~ /\.(a|la)$/) print
           }
-        ' | tar xf "${TENSORRT_TAR}" -C "${CI_PROJECT_DIR}/15-inference" -T -
+        ' > "${TENSORRT_FILE_LIST}"
+
+        echo "Extracting $(wc -l < "${TENSORRT_FILE_LIST}") TensorRT runtime files..."
+        timeout 15m tar --checkpoint=2000 --checkpoint-action=echo='Extracted TensorRT checkpoint %u' \
+          -xf "${TENSORRT_TAR}" -C "${CI_PROJECT_DIR}/15-inference" -T "${TENSORRT_FILE_LIST}"
 
         if [ ! -d "${TENSORRT_ROOT}/lib" ] && [ -d "${TENSORRT_ROOT}/targets/x86_64-linux-gnu/lib" ]; then
           ln -s "targets/x86_64-linux-gnu/lib" "${TENSORRT_ROOT}/lib"
         fi
         if [ ! -d "${TENSORRT_ROOT}/include" ] && [ -d "${TENSORRT_ROOT}/targets/x86_64-linux-gnu/include" ]; then
           ln -s "targets/x86_64-linux-gnu/include" "${TENSORRT_ROOT}/include"
+        fi
+        if [ ! -f "${TENSORRT_ROOT}/include/NvInfer.h" ] || [ ! -d "${TENSORRT_ROOT}/lib" ]; then
+          echo "TensorRT runtime extraction did not produce a valid TENSORRT_ROOT: ${TENSORRT_ROOT}" >&2
+          exit 1
         fi
       fi
     - cd "${CI_PROJECT_DIR}"
