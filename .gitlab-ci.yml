@@ -186,6 +186,7 @@
     - if: $CI_COMMIT_BRANCH == "submits/15-inference"
   variables:
     TENSORRT_ROOT: "/home/gitlab-runner/TensorRT-10.4.0.26"
+    TENSORRT_TAR: "/home/gitlab-runner/TensorRT-10.4.0.26.Linux.x86_64-gnu.cuda-12.6.tar.gz"
   before_script:
     - ls -la /dev/nvidia* || echo "No GPU devices"
     - |
@@ -199,9 +200,29 @@
     - |
       set -euo pipefail
       if [ ! -f "${TENSORRT_ROOT}/include/NvInfer.h" ]; then
-        echo "TensorRT root not found or invalid: ${TENSORRT_ROOT}" >&2
-        echo "Unpack TensorRT once on the runner and set TENSORRT_ROOT to that directory." >&2
-        exit 1
+        if [ ! -f "${TENSORRT_TAR}" ]; then
+          echo "TensorRT root not found or invalid: ${TENSORRT_ROOT}" >&2
+          echo "TensorRT tarball not found: ${TENSORRT_TAR}" >&2
+          exit 1
+        fi
+
+        export TENSORRT_ROOT="${CI_PROJECT_DIR}/15-inference/TensorRT-10.4.0.26"
+        mkdir -p "${CI_PROJECT_DIR}/15-inference"
+        tar tf "${TENSORRT_TAR}" | awk '
+          /^TensorRT-10\.4\.0\.26\/include(\/|$)/ ||
+          /^TensorRT-10\.4\.0\.26\/lib(\/|$)/ ||
+          /^TensorRT-10\.4\.0\.26\/targets\/x86_64-linux-gnu\/include(\/|$)/ ||
+          /^TensorRT-10\.4\.0\.26\/targets\/x86_64-linux-gnu\/lib(\/|$)/ {
+            if ($0 !~ /\.(a|la)$/) print
+          }
+        ' | tar xf "${TENSORRT_TAR}" -C "${CI_PROJECT_DIR}/15-inference" -T -
+
+        if [ ! -d "${TENSORRT_ROOT}/lib" ] && [ -d "${TENSORRT_ROOT}/targets/x86_64-linux-gnu/lib" ]; then
+          ln -s "targets/x86_64-linux-gnu/lib" "${TENSORRT_ROOT}/lib"
+        fi
+        if [ ! -d "${TENSORRT_ROOT}/include" ] && [ -d "${TENSORRT_ROOT}/targets/x86_64-linux-gnu/include" ]; then
+          ln -s "targets/x86_64-linux-gnu/include" "${TENSORRT_ROOT}/include"
+        fi
       fi
     - cd "${CI_PROJECT_DIR}"
   script:
