@@ -55,7 +55,27 @@ if [[ "${INFERENCE_TEST_EXTERNAL_SERVER:-}" != "1" ]]; then
   E2E_PORT="${INFERENCE_E2E_PORT:-50051}"
   "${BUILD}/trt_server" "${E2E_PORT}" "${ONNX}" &
   SERVER_PID=$!
-  sleep 15
+
+  WAIT_STEP_S="${INFERENCE_SERVER_WAIT_STEP_S:-5}"
+  WAIT_MAX_S="${INFERENCE_SERVER_WAIT_MAX_S:-3600}"
+  echo "Waiting for trt_server on 127.0.0.1:${E2E_PORT} (up to ${WAIT_MAX_S}s; first build is slow)..."
+  _deadline=$((SECONDS + WAIT_MAX_S))
+  while true; do
+    if ! kill -0 "${SERVER_PID}" 2>/dev/null; then
+      wait "${SERVER_PID}" || true
+      echo "run_tests.sh: trt_server exited before opening ${E2E_PORT}; see logs above." >&2
+      exit 1
+    fi
+    if python3 -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1', int('${E2E_PORT}'))); s.close()" 2>/dev/null; then
+      echo "trt_server is accepting connections on port ${E2E_PORT}."
+      break
+    fi
+    if [ "${SECONDS}" -ge "${_deadline}" ]; then
+      echo "run_tests.sh: timeout waiting for port ${E2E_PORT} (increase INFERENCE_SERVER_WAIT_MAX_S?)." >&2
+      exit 1
+    fi
+    sleep "${WAIT_STEP_S}"
+  done
 fi
 
 E2E_PORT="${INFERENCE_E2E_PORT:-50051}"
