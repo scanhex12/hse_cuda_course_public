@@ -37,8 +37,8 @@ class BenchmarkSettings:
     max_max_latency_s: float
 
 
-_BENCH_REF_AVG_MS = 8.3720
-_BENCH_REF_MAX_MS = 18.3208
+_BENCH_REF_AVG_MS = 8.0
+_BENCH_REF_MAX_MS = 17.9
 _DEFAULT_BENCH_MAX_AVG_S = str(_BENCH_REF_AVG_MS / 1000.0)
 _DEFAULT_BENCH_MAX_TAIL_S = str(_BENCH_REF_MAX_MS / 1000.0)
 
