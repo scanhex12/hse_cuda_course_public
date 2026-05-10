@@ -1,4 +1,3 @@
-# Для `python -m unittest discover -s tests` (или ./run_tests.sh)
 -r requirements-client.txt
-# Сверка эталона с тем же графом, что и у сервера (resnet50.onnx), без скачивания весов PyTorch
+grpcio-tools>=1.50
 onnxruntime>=1.16

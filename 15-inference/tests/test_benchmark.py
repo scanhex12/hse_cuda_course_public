@@ -1,4 +1,3 @@
-import os
 import sys
 import unittest
 from pathlib import Path
@@ -8,9 +7,7 @@ if str(_TASK_ROOT) not in sys.path:
     sys.path.insert(0, str(_TASK_ROOT))
 
 import client_benchmark
-
-_AUTHOR_REF_AVG_LATENCY_S = 0.0095
-_AUTHOR_REF_MAX_LATENCY_S = 0.0185
+import task_env
 
 
 def _flat_load_params(base: float) -> dict:
@@ -29,39 +26,24 @@ def _flat_load_params(base: float) -> dict:
 
 
 @unittest.skipUnless(
-    os.environ.get('INFERENCE_BENCHMARK_E2E'),
-    'set INFERENCE_BENCHMARK_E2E=1 and start trt_server (same host/port as INFERENCE_E2E_*)',
+    task_env.benchmark_e2e_enabled(),
+    'set TRT15_BENCH=1 (or INFERENCE_BENCHMARK_E2E=1) and start trt_server',
 )
 class TestBenchmarkServerE2E(unittest.TestCase):
     def test_server_handles_load_without_errors_and_latency_sla(self):
-        host = os.environ.get('INFERENCE_E2E_HOST', 'localhost')
-        port = int(os.environ.get('INFERENCE_E2E_PORT', '50051'))
-        duration = float(os.environ.get('INFERENCE_BENCHMARK_DURATION_S', '1.0'))
-        num_threads = int(os.environ.get('INFERENCE_BENCHMARK_THREADS', '2'))
-        base = float(os.environ.get('INFERENCE_BENCHMARK_LOAD_BASE', '6.0'))
-        max_avg_s = float(
-            os.environ.get(
-                'INFERENCE_BENCHMARK_MAX_AVG_LATENCY_S',
-                str(_AUTHOR_REF_AVG_LATENCY_S * 2.0),
-            )
-        )
-        max_worst_s = float(
-            os.environ.get(
-                'INFERENCE_BENCHMARK_MAX_MAX_LATENCY_S',
-                str(_AUTHOR_REF_MAX_LATENCY_S * 2.0),
-            )
-        )
+        endpoint = task_env.e2e_settings()
+        bench = task_env.benchmark_settings()
 
         png = _TASK_ROOT / 'image.png'
         image_paths = [str(png)] if png.is_file() else None
 
         out = client_benchmark.run_benchmark(
-            host,
-            port,
-            duration,
-            num_threads,
+            endpoint.host,
+            endpoint.port,
+            bench.duration_s,
+            bench.threads,
             image_paths,
-            _flat_load_params(base),
+            _flat_load_params(bench.load_base),
             quiet=True,
         )
         self.assertEqual(
@@ -76,13 +58,19 @@ class TestBenchmarkServerE2E(unittest.TestCase):
         )
         self.assertLess(
             out['avg_latency_s'],
-            max_avg_s,
-            msg=f"avg latency {out['avg_latency_s']*1000:.1f} ms >= limit {max_avg_s*1000:.1f} ms",
+            bench.max_avg_latency_s,
+            msg=(
+                f"avg latency {out['avg_latency_s']*1000:.1f} ms >= limit "
+                f"{bench.max_avg_latency_s*1000:.1f} ms"
+            ),
         )
         self.assertLess(
             out['max_latency_s'],
-            max_worst_s,
-            msg=f"max latency {out['max_latency_s']*1000:.1f} ms >= limit {max_worst_s*1000:.1f} ms",
+            bench.max_max_latency_s,
+            msg=(
+                f"max latency {out['max_latency_s']*1000:.1f} ms >= limit "
+                f"{bench.max_max_latency_s*1000:.1f} ms"
+            ),
         )
 
 

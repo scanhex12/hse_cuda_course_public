@@ -144,7 +144,6 @@ def run_benchmark(
     *,
     quiet=False,
 ):
-    """Запуск бенчмарка; возвращает агрегаты для тестов (quiet=True без вывода в stdout)."""
     if not quiet:
         print("Starting benchmark:")
         print(f"  Host: {host}")

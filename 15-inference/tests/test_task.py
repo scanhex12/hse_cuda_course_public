@@ -1,5 +1,4 @@
 import json
-import os
 import random
 import sys
 import unittest
@@ -16,6 +15,7 @@ import inference_pb2_grpc
 import onnxruntime as ort
 
 import client_benchmark
+import task_env
 from PIL import Image
 
 _REF_PATH = _TASK_ROOT / 'tests' / 'reference_top5_image_png.json'
@@ -121,11 +121,13 @@ class TestImagesHelpers(unittest.TestCase):
         self.assertEqual(img.size, (224, 224))
 
 
-@unittest.skipUnless(os.environ.get('INFERENCE_E2E'), 'set INFERENCE_E2E=1 and run trt_server')
+@unittest.skipUnless(
+    task_env.e2e_tests_enabled(),
+    'set TRT15_E2E=1 (or INFERENCE_E2E=1) and run trt_server',
+)
 class TestGrpcE2E(unittest.TestCase):
     def test_classify_top5_matches_reference(self):
-        host = os.environ.get('INFERENCE_E2E_HOST', 'localhost')
-        port = int(os.environ.get('INFERENCE_E2E_PORT', '50051'))
+        endpoint = task_env.e2e_settings()
         png = _TASK_ROOT / 'image.png'
         if not png.is_file():
             self.skipTest('image.png missing')
@@ -135,7 +137,7 @@ class TestGrpcE2E(unittest.TestCase):
         data = np.array(img, dtype=np.uint8).tobytes()
         req = inference_pb2.InferRequest(width=224, height=224, rgb_image=data)
 
-        channel = grpc.insecure_channel(f'{host}:{port}')
+        channel = grpc.insecure_channel(f'{endpoint.host}:{endpoint.port}')
         try:
             stub = inference_pb2_grpc.InferenceServiceStub(channel)
             resp = stub.Classify(req, timeout=120.0)
