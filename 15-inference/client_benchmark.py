@@ -20,6 +20,17 @@ _GRPC_CHANNEL_OPTIONS = (
     ("grpc.keepalive_timeout_ms", 10_000),
 )
 
+# Повторяем всё, что похоже на сеть/очередь/временный перегруз на сервере; не трогаем явные клиентские ошибки.
+_GRPC_NO_RETRY = frozenset(
+    {
+        grpc.StatusCode.INVALID_ARGUMENT,
+        grpc.StatusCode.NOT_FOUND,
+        grpc.StatusCode.PERMISSION_DENIED,
+        grpc.StatusCode.UNAUTHENTICATED,
+        grpc.StatusCode.UNIMPLEMENTED,
+    }
+)
+
 
 def generate_random_image():
     arr = np.random.randint(0, 256, (224, 224, 3), dtype=np.uint8)
@@ -43,18 +54,12 @@ def send_request(host, port, image_data):
         channel.close()
 
 
-def classify_once(stub, image_data, timeout_s=45.0):
+def classify_once(stub, image_data, timeout_s=45.0, max_attempts=6):
     req = inference_pb2.InferRequest()
     req.width = 224
     req.height = 224
     req.rgb_image = image_data
-    transient = {
-        grpc.StatusCode.UNAVAILABLE,
-        grpc.StatusCode.RESOURCE_EXHAUSTED,
-        grpc.StatusCode.ABORTED,
-        grpc.StatusCode.DEADLINE_EXCEEDED,
-    }
-    for attempt in range(3):
+    for attempt in range(max_attempts):
         try:
             resp = stub.Classify(req, timeout=timeout_s)
             if len(resp.top5) != 5:
@@ -63,12 +68,32 @@ def classify_once(stub, image_data, timeout_s=45.0):
             scores = tuple(p.score for p in resp.top5)
             return (indices, scores)
         except grpc.RpcError as e:
-            if e.code() not in transient or attempt + 1 >= 3:
+            if e.code() in _GRPC_NO_RETRY:
                 return None
-            time.sleep(0.03 * (attempt + 1))
+            if attempt + 1 >= max_attempts:
+                return None
+            time.sleep(min(0.5, 0.04 * (2**attempt)))
         except Exception:
             return None
     return None
+
+
+def _warmup_before_benchmark(host, port, images, quiet):
+    """Один запрос до измерений: прогрев путей сервера (TLS-контекст, граф, alloc)."""
+    target = f"{host}:{port}"
+    channel = grpc.insecure_channel(target, options=list(_GRPC_CHANNEL_OPTIONS))
+    try:
+        stub = inference_pb2_grpc.InferenceServiceStub(channel)
+        img = random.choice(images)
+        data = np.array(img, dtype=np.uint8).tobytes()
+        if classify_once(stub, data, timeout_s=120.0, max_attempts=8) is None:
+            msg = "benchmark warmup: Classify failed (continuing anyway)\n"
+            if quiet:
+                sys.stderr.write(msg)
+            else:
+                print(msg, end="")
+    finally:
+        channel.close()
 
 def load_function(t, params):
     A = params.get('A', 5.0)
@@ -164,6 +189,8 @@ def run_benchmark(
 
     if not images:
         images = [generate_random_image()]
+
+    _warmup_before_benchmark(host, port, images, quiet)
 
     stats = {
         'success': 0,
