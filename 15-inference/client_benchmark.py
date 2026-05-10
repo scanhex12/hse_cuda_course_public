@@ -29,15 +29,21 @@ def load_image_or_generate(image_path):
     return generate_random_image()
 
 def send_request(host, port, image_data):
+    target = f"{host}:{port}"
+    channel = grpc.insecure_channel(target)
+    try:
+        stub = inference_pb2_grpc.InferenceServiceStub(channel)
+        return classify_once(stub, image_data)
+    finally:
+        channel.close()
+
+
+def classify_once(stub, image_data):
     req = inference_pb2.InferRequest()
     req.width = 224
     req.height = 224
     req.rgb_image = image_data
-    target = f"{host}:{port}"
-    channel = None
     try:
-        channel = grpc.insecure_channel(target)
-        stub = inference_pb2_grpc.InferenceServiceStub(channel)
         resp = stub.Classify(req, timeout=30.0)
         if len(resp.top5) != 5:
             return None
@@ -46,9 +52,6 @@ def send_request(host, port, image_data):
         return (indices, scores)
     except Exception:
         return None
-    finally:
-        if channel is not None:
-            channel.close()
 
 def load_function(t, params):
     A = params.get('A', 5.0)
@@ -72,40 +75,46 @@ def load_function(t, params):
     return max(0.1, load)
 
 def worker_thread(host, port, images, stats, stop_event, load_func, load_params):
+    target = f"{host}:{port}"
+    channel = grpc.insecure_channel(target)
+    stub = inference_pb2_grpc.InferenceServiceStub(channel)
     request_times = deque(maxlen=1000)
-    
-    while not stop_event.is_set():
-        t = time.time()
-        load = load_func(t, load_params)
-        
-        delay = 1.0 / load if load > 0 else 1.0
-        time.sleep(delay)
-        
-        if stop_event.is_set():
-            break
-        
-        img = random.choice(images)
-        arr = np.array(img, dtype=np.uint8)
-        image_data = arr.tobytes()
-        
-        start_time = time.time()
-        result = send_request(host, port, image_data)
-        elapsed = time.time() - start_time
-        
-        with stats['lock']:
-            if result is not None:
-                stats['success'] += 1
-                request_times.append(elapsed)
-                stats['total_time'] += elapsed
-                stats['max_latency'] = max(stats['max_latency'], elapsed)
-                stats['avg_latency'] = (
-                    stats['total_time'] / stats['success']
-                    if stats['success'] > 0
-                    else 0.0
-                )
-                stats['min_latency'] = min(stats['min_latency'], elapsed)
-            else:
-                stats['errors'] += 1
+
+    try:
+        while not stop_event.is_set():
+            t = time.time()
+            load = load_func(t, load_params)
+
+            delay = 1.0 / load if load > 0 else 1.0
+            time.sleep(delay)
+
+            if stop_event.is_set():
+                break
+
+            img = random.choice(images)
+            arr = np.array(img, dtype=np.uint8)
+            image_data = arr.tobytes()
+
+            start_time = time.time()
+            result = classify_once(stub, image_data)
+            elapsed = time.time() - start_time
+
+            with stats['lock']:
+                if result is not None:
+                    stats['success'] += 1
+                    request_times.append(elapsed)
+                    stats['total_time'] += elapsed
+                    stats['max_latency'] = max(stats['max_latency'], elapsed)
+                    stats['avg_latency'] = (
+                        stats['total_time'] / stats['success']
+                        if stats['success'] > 0
+                        else 0.0
+                    )
+                    stats['min_latency'] = min(stats['min_latency'], elapsed)
+                else:
+                    stats['errors'] += 1
+    finally:
+        channel.close()
 
 
 def run_benchmark(
@@ -208,7 +217,8 @@ def run_benchmark(
             print("\nInterrupted by user")
 
     stop_event.set()
-    time.sleep(1.0)
+    for t in threads:
+        t.join(timeout=2.0)
 
     final_time = time.time() - start_time
 
