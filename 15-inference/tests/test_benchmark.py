@@ -46,6 +46,22 @@ class TestBenchmarkServerE2E(unittest.TestCase):
             _flat_load_params(bench.load_base),
             quiet=True,
         )
+
+        print(
+            "\n--- benchmark results ---\n"
+            f"  endpoint:         {endpoint.host}:{endpoint.port}\n"
+            f"  duration_s:        {bench.duration_s}\n"
+            f"  threads:           {bench.threads}\n"
+            f"  load_base (RPS):   {bench.load_base}\n"
+            f"  success / errors:  {out['success']} / {out['errors']}\n"
+            f"  avg_latency_ms:    {out['avg_latency_s'] * 1000.0:.4f} "
+            f"(limit < {bench.max_avg_latency_s * 1000.0:.4f})\n"
+            f"  max_latency_ms:    {out['max_latency_s'] * 1000.0:.4f} "
+            f"(limit < {bench.max_max_latency_s * 1000.0:.4f})\n"
+            "---",
+            flush=True,
+        )
+
         self.assertEqual(
             out['errors'],
             0,
