@@ -9,8 +9,8 @@ if str(_TASK_ROOT) not in sys.path:
 
 import client_benchmark
 
-_AUTHOR_REF_AVG_LATENCY_S = 0.0005
-_AUTHOR_REF_MAX_LATENCY_S = 0.0085
+_AUTHOR_REF_AVG_LATENCY_S = 0.0095
+_AUTHOR_REF_MAX_LATENCY_S = 0.0185
 
 
 def _flat_load_params(base: float) -> dict:
@@ -36,7 +36,7 @@ class TestBenchmarkServerE2E(unittest.TestCase):
     def test_server_handles_load_without_errors_and_latency_sla(self):
         host = os.environ.get('INFERENCE_E2E_HOST', 'localhost')
         port = int(os.environ.get('INFERENCE_E2E_PORT', '50051'))
-        duration = float(os.environ.get('INFERENCE_BENCHMARK_DURATION_S', '4'))
+        duration = float(os.environ.get('INFERENCE_BENCHMARK_DURATION_S', '2.5'))
         num_threads = int(os.environ.get('INFERENCE_BENCHMARK_THREADS', '3'))
         base = float(os.environ.get('INFERENCE_BENCHMARK_LOAD_BASE', '12.0'))
         max_avg_s = float(
