@@ -37,8 +37,10 @@ class BenchmarkSettings:
     max_max_latency_s: float
 
 
-_AUTHOR_AVG = 0.0095
-_AUTHOR_MAX = 0.0185
+_BENCH_REF_AVG_MS = 8.3720
+_BENCH_REF_MAX_MS = 18.3208
+_DEFAULT_BENCH_MAX_AVG_S = str(_BENCH_REF_AVG_MS / 1000.0)
+_DEFAULT_BENCH_MAX_TAIL_S = str(_BENCH_REF_MAX_MS / 1000.0)
 
 
 def benchmark_settings() -> BenchmarkSettings:
@@ -50,14 +52,14 @@ def benchmark_settings() -> BenchmarkSettings:
             _pick(
                 "TRT15_BENCH_MAX_AVG_S",
                 "INFERENCE_BENCHMARK_MAX_AVG_LATENCY_S",
-                str(_AUTHOR_AVG * 2.0),
+                _DEFAULT_BENCH_MAX_AVG_S,
             )
         ),
         max_max_latency_s=float(
             _pick(
                 "TRT15_BENCH_MAX_TAIL_S",
                 "INFERENCE_BENCHMARK_MAX_MAX_LATENCY_S",
-                str(_AUTHOR_MAX * 2.0),
+                _DEFAULT_BENCH_MAX_TAIL_S,
             )
         ),
     )

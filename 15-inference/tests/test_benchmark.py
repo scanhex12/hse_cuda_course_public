@@ -55,9 +55,9 @@ class TestBenchmarkServerE2E(unittest.TestCase):
             f"  load_base (RPS):   {bench.load_base}\n"
             f"  success / errors:  {out['success']} / {out['errors']}\n"
             f"  avg_latency_ms:    {out['avg_latency_s'] * 1000.0:.4f} "
-            f"(limit < {bench.max_avg_latency_s * 1000.0:.4f})\n"
+            f"(≤ {bench.max_avg_latency_s * 1000.0:.4f} ms SLA)\n"
             f"  max_latency_ms:    {out['max_latency_s'] * 1000.0:.4f} "
-            f"(limit < {bench.max_max_latency_s * 1000.0:.4f})\n"
+            f"(≤ {bench.max_max_latency_s * 1000.0:.4f} ms SLA)\n"
             "---",
             flush=True,
         )
@@ -72,20 +72,20 @@ class TestBenchmarkServerE2E(unittest.TestCase):
             0,
             msg='no successful requests — server unreachable or failing immediately',
         )
-        self.assertLess(
+        self.assertLessEqual(
             out['avg_latency_s'],
             bench.max_avg_latency_s,
             msg=(
-                f"avg latency {out['avg_latency_s']*1000:.1f} ms >= limit "
-                f"{bench.max_avg_latency_s*1000:.1f} ms"
+                f"avg latency {out['avg_latency_s']*1000:.4f} ms > SLA "
+                f"{bench.max_avg_latency_s*1000:.4f} ms"
             ),
         )
-        self.assertLess(
+        self.assertLessEqual(
             out['max_latency_s'],
             bench.max_max_latency_s,
             msg=(
-                f"max latency {out['max_latency_s']*1000:.1f} ms >= limit "
-                f"{bench.max_max_latency_s*1000:.1f} ms"
+                f"max latency {out['max_latency_s']*1000:.4f} ms > SLA "
+                f"{bench.max_max_latency_s*1000:.4f} ms"
             ),
         )
 
