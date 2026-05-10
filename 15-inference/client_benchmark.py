@@ -15,6 +15,11 @@ from PIL import Image
 import inference_pb2
 import inference_pb2_grpc
 
+_GRPC_CHANNEL_OPTIONS = (
+    ("grpc.keepalive_time_ms", 30_000),
+    ("grpc.keepalive_timeout_ms", 10_000),
+)
+
 
 def generate_random_image():
     arr = np.random.randint(0, 256, (224, 224, 3), dtype=np.uint8)
@@ -30,7 +35,7 @@ def load_image_or_generate(image_path):
 
 def send_request(host, port, image_data):
     target = f"{host}:{port}"
-    channel = grpc.insecure_channel(target)
+    channel = grpc.insecure_channel(target, options=list(_GRPC_CHANNEL_OPTIONS))
     try:
         stub = inference_pb2_grpc.InferenceServiceStub(channel)
         return classify_once(stub, image_data)
@@ -38,20 +43,32 @@ def send_request(host, port, image_data):
         channel.close()
 
 
-def classify_once(stub, image_data):
+def classify_once(stub, image_data, timeout_s=45.0):
     req = inference_pb2.InferRequest()
     req.width = 224
     req.height = 224
     req.rgb_image = image_data
-    try:
-        resp = stub.Classify(req, timeout=30.0)
-        if len(resp.top5) != 5:
+    transient = {
+        grpc.StatusCode.UNAVAILABLE,
+        grpc.StatusCode.RESOURCE_EXHAUSTED,
+        grpc.StatusCode.ABORTED,
+        grpc.StatusCode.DEADLINE_EXCEEDED,
+    }
+    for attempt in range(3):
+        try:
+            resp = stub.Classify(req, timeout=timeout_s)
+            if len(resp.top5) != 5:
+                return None
+            indices = tuple(p.class_index for p in resp.top5)
+            scores = tuple(p.score for p in resp.top5)
+            return (indices, scores)
+        except grpc.RpcError as e:
+            if e.code() not in transient or attempt + 1 >= 3:
+                return None
+            time.sleep(0.03 * (attempt + 1))
+        except Exception:
             return None
-        indices = tuple(p.class_index for p in resp.top5)
-        scores = tuple(p.score for p in resp.top5)
-        return (indices, scores)
-    except Exception:
-        return None
+    return None
 
 def load_function(t, params):
     A = params.get('A', 5.0)
@@ -76,7 +93,7 @@ def load_function(t, params):
 
 def worker_thread(host, port, images, stats, stop_event, load_func, load_params):
     target = f"{host}:{port}"
-    channel = grpc.insecure_channel(target)
+    channel = grpc.insecure_channel(target, options=list(_GRPC_CHANNEL_OPTIONS))
     stub = inference_pb2_grpc.InferenceServiceStub(channel)
     request_times = deque(maxlen=1000)
 
@@ -218,7 +235,7 @@ def run_benchmark(
 
     stop_event.set()
     for t in threads:
-        t.join(timeout=2.0)
+        t.join(timeout=8.0)
 
     final_time = time.time() - start_time
 
