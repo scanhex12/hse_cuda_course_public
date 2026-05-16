@@ -10,10 +10,6 @@
 
 using namespace delta_stepping;
 
-namespace {
-constexpr int REF_INF = 1e9;
-}
-
 static void build_csr(int n, const std::vector<std::tuple<int, int, int>>& edges,
                       std::vector<int>& csr_row_ptr, std::vector<int>& csr_col_idx,
                       std::vector<int>& edge_weight) {
