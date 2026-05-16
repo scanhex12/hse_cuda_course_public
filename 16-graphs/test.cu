@@ -11,7 +11,7 @@
 using namespace delta_stepping;
 
 namespace {
-constexpr int REF_INF = delta_stepping::INF;
+constexpr int REF_INF = 1e9;
 }
 
 static void build_csr(int n, const std::vector<std::tuple<int, int, int>>& edges,
@@ -43,7 +43,7 @@ static void dijkstra_cpu(int n, const std::vector<int>& csr_row_ptr,
                          const std::vector<int>& csr_col_idx,
                          const std::vector<int>& edge_weight, int source,
                          std::vector<int>& dist) {
-    dist.assign((size_t)n, REF_INF);
+    dist.assign((size_t)n, (size_t)1e9);
     dist[(size_t)source] = 0;
     std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<>>
         pq;
