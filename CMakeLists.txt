@@ -42,6 +42,7 @@ add_if_exists(12-tensorcores)
 add_if_exists(13-streaming-vad)
 add_if_exists(14-db)
 add_if_exists(15-inference)
+add_if_exists(16-graphs)
 
 if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/private)
   add_subdirectory(private)
