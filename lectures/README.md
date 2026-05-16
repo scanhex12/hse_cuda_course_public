@@ -82,6 +82,15 @@
 3.3 Paged attention
 3.4 Speculative decoding/EAGLE
 
+## Week 9
+
+Презентация: https://docs.google.com/presentation/d/1UXqvuakKcXOK6wL7qik029_7BX6ZT7l6RHLYbJnp7hk/edit?usp=sharing
+1. Data parallel
+2. Model/Tensor parallel, FSDP
+3. библиотеки для меж-гпу коммуникаций - NCCL
+4. deepseek mixture of experts cross GPU library - DeepEP
+5. UCCL-EP
+
 # Семинары
 
 ## Алгоритмы 1
