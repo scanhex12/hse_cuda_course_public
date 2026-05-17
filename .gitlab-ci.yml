@@ -276,3 +276,15 @@
     - cd "${CI_PROJECT_DIR}/18-triton-normalization"
     - chmod +x run_tests.sh
     - ./run_tests.sh
+
+19-triton-gemm:
+  <<: *base
+  rules:
+    - if: $CI_COMMIT_BRANCH == "submits/19-triton-gemm"
+  before_script:
+    - ls -la /dev/nvidia* || echo "No GPU devices"
+    - apt-get update -qq && apt-get install -y -qq python3 python3-pip python3-venv
+  script:
+    - cd "${CI_PROJECT_DIR}/19-triton-gemm"
+    - chmod +x run_tests.sh
+    - ./run_tests.sh
