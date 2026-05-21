@@ -4,10 +4,6 @@ import torch
 from kernel import layernorm_relu_fp16
 
 
-@pytest.mark.skipif(
-    not torch.cuda.is_available(),
-    reason="CUDA is required for Triton kernel",
-)
 @pytest.mark.parametrize("B,N", [
     (1, 64),
     (2, 128),
@@ -15,6 +11,12 @@ from kernel import layernorm_relu_fp16
     (8, 1024),
 ])
 def test_layernorm_relu_fp16(B, N):
+    if not torch.cuda.is_available():
+        pytest.fail(
+            "CUDA is required but torch.cuda.is_available() is False "
+            f"(torch {torch.__version__}, cuda built {torch.backends.cuda.is_built()})"
+        )
+
     torch.manual_seed(0)
     device = "cuda"
     eps = 1e-5

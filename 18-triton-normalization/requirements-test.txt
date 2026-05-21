@@ -1,3 +1,7 @@
---extra-index-url https://download.pytorch.org/whl/cu121
-torch>=2.2
+# Pin +cu121 explicitly: with --extra-index-url PyPI may install a CPU/cu124 wheel otherwise.
+--index-url https://download.pytorch.org/whl/cu121
+--extra-index-url https://pypi.org/simple
+torch==2.4.1+cu121
+triton==3.0.0
+numpy>=1.24
 pytest>=7.0
