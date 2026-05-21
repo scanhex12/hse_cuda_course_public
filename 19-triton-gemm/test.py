@@ -21,8 +21,9 @@ def _assert_close_quantized(triton_out: torch.Tensor, torch_out: torch.Tensor) -
     assert torch.quantile(diff, 0.95) < 0.07, f"p95 abs error {torch.quantile(diff, 0.95).item():.4f}"
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
 def test_quantize_int8_perrow():
+    if not torch.cuda.is_available():
+        pytest.fail("CUDA required")
     torch.manual_seed(0)
     a = torch.randn(64, 128, device="cuda", dtype=torch.float16)
     int_a, scale_a = quantize_int8_perrow(a)
@@ -32,8 +33,9 @@ def test_quantize_int8_perrow():
     torch.testing.assert_close(int_a.float(), ref_int.float(), atol=1.0)
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
 def test_matmul_quantize_int8():
+    if not torch.cuda.is_available():
+        pytest.fail("CUDA required")
     torch.manual_seed(42)
     M, K, N = 128, 256, 128
     a = torch.randn(M, K, device="cuda", dtype=torch.float16)
@@ -45,8 +47,9 @@ def test_matmul_quantize_int8():
     _assert_close_quantized(triton_out, torch_out)
 
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA required")
 def test_matmul_int8_pipeline():
+    if not torch.cuda.is_available():
+        pytest.fail("CUDA required")
     torch.manual_seed(7)
     M, K, N = 64, 128, 64
     a = torch.randn(M, K, device="cuda", dtype=torch.float16)
