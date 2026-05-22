@@ -30,7 +30,7 @@ def test_quantize_int8_perrow():
     ref_scale = a.abs().amax(dim=1) / 127.0
     ref_int = (a / ref_scale.unsqueeze(1)).to(torch.int8)
     torch.testing.assert_close(scale_a, ref_scale, rtol=1e-2, atol=1e-2)
-    torch.testing.assert_close(int_a.float(), ref_int.float(), atol=1.0)
+    torch.testing.assert_close(int_a.float(), ref_int.float(), rtol=0.0, atol=1.0)
 
 
 def test_matmul_quantize_int8():
