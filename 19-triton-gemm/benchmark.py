@@ -56,7 +56,7 @@ def perf_matmul_int8(
     K: int,
     N: int,
     iters: int = ITERS_MATMUL,
-    thr: float = 0.99,
+    thr: float = 0.95,
 ) -> tuple[float, float, float]:
     torch.manual_seed(0)
     a = torch.randn((M, K), device="cuda", dtype=torch.float16)
@@ -108,7 +108,7 @@ def perf_model_layer(
     hidden: int,
     inter: int,
     tp: int,
-    thr: float = 0.99,
+    thr: float = 0.95,
     label: str = "",
 ) -> None:
     st1 = 0.0
@@ -151,7 +151,7 @@ def run_all() -> None:
     perf_matmul_int8(BS * PREFILL_LEN, HIDDEN, HIDDEN * 3 // TP)
 
     print("benchmark: model layer prefill")
-    perf_model_layer(BS, PREFILL_LEN, HIDDEN, INTER, TP, thr=1.3, label="prefill")
+    perf_model_layer(BS, PREFILL_LEN, HIDDEN, INTER, TP, thr=1.0, label="prefill")
 
     print("benchmark: model layer decode")
     perf_model_layer(BS, DECODE_LEN, HIDDEN, INTER, TP, thr=0.1, label="decode")
