@@ -2,8 +2,6 @@
 
 Реализуйте квантованное матричное умножение для inference: активации и веса в `int8`, GEMM в Triton, затем восстановление результата в `fp16`.
 
-Сдавать только `kernel.py`. Каркас ядер и `autotune_config.py` уже есть.
-
 ## Идея
 
 Линейный слой `Y = X @ W`, где `X` — `(M, K)`, `W` — `(K, N)`.
@@ -29,21 +27,6 @@ x_hat ≈ x_int8 * scale
 
 - `X` (M×K, fp16) → per-row квант → `X_int` (M×K, int8) + `scale_X` (M,)
 - `W` (K×N, fp16) → квант по столбцам (`axis=0`) → `W_int` (K×N, int8) + `scale_W` (N,)
-
-### Matmul + dequant
-
-Сначала считаем целочисленное произведение, потом восстанавливаем шкалы:
-
-```
-acc = X_int @ W_int          # int32
-Y[i, j] ≈ acc[i, j] * scale_X[i] * scale_W[j]
-```
-
-В коде:
-
-```python
-Y ≈ (X_int @ W_int).float() * scale_X[:, None] * scale_W[None, :]
-```
 
 ## Что нужно написать
 
