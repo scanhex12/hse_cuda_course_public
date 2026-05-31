@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+#include <cuda_helpers.h>
+
 using namespace delta_stepping;
 
 namespace {
@@ -104,22 +106,22 @@ float benchmark_avg_ms(int n, const int* csr_row_ptr, const int* csr_col_idx,
 
     cudaEvent_t start{};
     cudaEvent_t stop{};
-    CUDA_CHECK(cudaEventCreate(&start));
-    CUDA_CHECK(cudaEventCreate(&stop));
+    CheckStatus(cudaEventCreate(&start));
+    CheckStatus(cudaEventCreate(&stop));
 
     float total_ms = 0.f;
     for (int i = 0; i < reps; ++i) {
-        CUDA_CHECK(cudaEventRecord(start));
+        CheckStatus(cudaEventRecord(start));
         shortest_paths(n, csr_row_ptr, csr_col_idx, edge_weight, source, delta, dist_buf.data());
-        CUDA_CHECK(cudaEventRecord(stop));
-        CUDA_CHECK(cudaEventSynchronize(stop));
+        CheckStatus(cudaEventRecord(stop));
+        CheckStatus(cudaEventSynchronize(stop));
         float ms = 0.f;
-        CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
+        CheckStatus(cudaEventElapsedTime(&ms, start, stop));
         total_ms += ms;
     }
 
-    CUDA_CHECK(cudaEventDestroy(stop));
-    CUDA_CHECK(cudaEventDestroy(start));
+    CheckStatus(cudaEventDestroy(stop));
+    CheckStatus(cudaEventDestroy(start));
     return total_ms / (float)reps;
 }
 
