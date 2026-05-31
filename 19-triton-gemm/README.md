@@ -1,20 +1,51 @@
 # Задача 19: Dynamic W8A8 GeMM (Triton)
 
-Реализуйте квантованное матричное умножение для inference: активации и веса в `int8`, GEMM в Triton, восстановление fp16 через шкалы (dequant).
+Реализуйте квантованное матричное умножение для inference: активации и веса в `int8`, GEMM в Triton, затем восстановление результата в `fp16`.
 
 Сдавать только `kernel.py`. Каркас ядер и `autotune_config.py` уже есть.
 
 ## Идея
 
-Линейный слой `Y = X @ W`:
+Линейный слой `Y = X @ W`, где `X` — `(M, K)`, `W` — `(K, N)`.
 
-- `X` (M×K, fp16) → per-row квант в `int8` + вектор шкал длины M
-- `W` (K×N) → квант по столбцам (`axis=0`) + вектор шкал длины N
-- `Y ≈ (X_int @ W_int) * scale_X[:, None] * scale_W[None, :]`
+### Квантование (quantize)
 
-Шкала: `max |x| / 127` по соответствующей оси. Округление до int8 даёт расхождение с `torch.matmul` — в тестах пороги ослаблены.
+Сначала `fp16` → `int8` с одной шкалой на строку/столбец:
 
-## API
+```
+scale = max(|x|) / 127
+x_int8 = round(x / scale)
+```
+
+Обратное преобразование (приближённое восстановление `fp16`):
+
+```
+x_hat ≈ x_int8 * scale
+```
+
+Это будем называть dequant.
+
+Для слоя:
+
+- `X` (M×K, fp16) → per-row квант → `X_int` (M×K, int8) + `scale_X` (M,)
+- `W` (K×N, fp16) → квант по столбцам (`axis=0`) → `W_int` (K×N, int8) + `scale_W` (N,)
+
+### Matmul + dequant
+
+Сначала считаем целочисленное произведение, потом восстанавливаем шкалы:
+
+```
+acc = X_int @ W_int          # int32
+Y[i, j] ≈ acc[i, j] * scale_X[i] * scale_W[j]
+```
+
+В коде:
+
+```python
+Y ≈ (X_int @ W_int).float() * scale_X[:, None] * scale_W[None, :]
+```
+
+## Что нужно написать
 
 ### `quantize_int8_perrow_kernel` (Triton)
 
@@ -30,18 +61,19 @@ Host-запуск ядра выше. Возвращает `(a, a_scale)`.
 
 ### `perrow_w8a8_matmul_kernel` (Triton)
 
-Считает `C = dequant(A_int @ B_int)`:
+Считает `C` — результат `int8` matmul с dequant в `fp16`:
+
+1. `acc = A @ B` в `int32`
+2. `C = acc * a_scale[:, None] * b_scale[None, :]` → `fp16`
 
 - `A` (M×K, int8), `a_scale` (M,)
 - `B` (K×N, int8), `b_scale` (N,)
 - `C` (M×N, fp16)
 
-Каркас tiling / `SPLIT_K` задан; нужно реализовать накопление int32, цикл по K и dequant. Autotune — `get_autotune_config()`.
+### `matmul_int8(a, a_scale, b, b_scale)`
 
-### `matmul_int8(a, a_scale, b, b_scale, out=None)`
+Обёртка: запуск `perrow_w8a8_matmul_kernel`, выход fp16 (M×N).
 
-Обёртка: запуск `perrow_w8a8_matmul_kernel`, выход fp16 (M×N). `out` — опциональный буфер результата.
-
-### `matmul_quantize_int8(fpa, b, b_scale, out=None)`
+### `matmul_quantize_int8(fpa, b, b_scale)`
 
 Полный путь для активаций: квант `fpa` (per-row) + `matmul_int8` с уже квантованными весами `b`, `b_scale`.

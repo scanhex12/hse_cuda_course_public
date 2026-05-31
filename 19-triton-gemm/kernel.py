@@ -77,7 +77,6 @@ def matmul_int8(
     a_scale: torch.Tensor,
     b: torch.Tensor,
     b_scale: torch.Tensor,
-    out: torch.Tensor | None = None,
 ) -> torch.Tensor:
     pass
 
@@ -86,6 +85,5 @@ def matmul_quantize_int8(
     fpa: torch.Tensor,
     b: torch.Tensor,
     b_scale: torch.Tensor,
-    out: torch.Tensor | None = None,
 ) -> torch.Tensor:
     pass
