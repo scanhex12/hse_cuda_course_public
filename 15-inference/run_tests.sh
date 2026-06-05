@@ -22,15 +22,81 @@ fi
 ROOT="$(cd "${TASK_DIR}/.." && pwd)"
 BUILD="${ROOT}/build"
 ONNX="${TASK_DIR}/resnet50.onnx"
+E2E_PORT="${TRT15_PORT:-${INFERENCE_E2E_PORT:-50051}}"
 SERVER_PID=""
+SERVER_STARTED=""
+
+port_pids() {
+  local port="$1"
+  local pids=""
+
+  if command -v fuser >/dev/null 2>&1; then
+    pids=$(fuser "${port}/tcp" 2>/dev/null | tr -s ' ' '\n' | { grep -E '^[0-9]+$' || true; })
+  fi
+  if [[ -z "${pids}" ]] && command -v lsof >/dev/null 2>&1; then
+    pids=$(lsof -t -i ":${port}" -sTCP:LISTEN 2>/dev/null || true)
+  fi
+  if [[ -z "${pids}" ]] && command -v ss >/dev/null 2>&1; then
+    pids=$(
+      ss -tlnp 2>/dev/null \
+        | { grep ":${port} " || true; } \
+        | sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p'
+    )
+  fi
+
+  echo "${pids}" | tr ' ' '\n' | { grep -E '^[0-9]+$' || true; } | sort -u
+}
+
+stop_server() {
+  local pid="${1:-}"
+  if [[ -z "${pid}" ]]; then
+    return 0
+  fi
+  if ! kill -0 "${pid}" 2>/dev/null; then
+    return 0
+  fi
+  kill -TERM "${pid}" 2>/dev/null || true
+  for _ in $(seq 1 20); do
+    if ! kill -0 "${pid}" 2>/dev/null; then
+      wait "${pid}" 2>/dev/null || true
+      return 0
+    fi
+    sleep 0.25
+  done
+  kill -KILL "${pid}" 2>/dev/null || true
+  wait "${pid}" 2>/dev/null || true
+}
+
+free_port() {
+  local port="$1"
+  local pid
+
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -k "${port}/tcp" >/dev/null 2>&1 || true
+  fi
+
+  while read -r pid; do
+    [[ -n "${pid}" ]] || continue
+    stop_server "${pid}"
+  done < <(port_pids "${port}")
+
+  sleep 0.5
+}
+
+port_is_open() {
+  python3 -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1', int('${E2E_PORT}'))); s.close()" 2>/dev/null
+}
 
 cleanup() {
   if [[ -n "${SERVER_PID}" ]]; then
-    kill "${SERVER_PID}" 2>/dev/null || true
-    wait "${SERVER_PID}" 2>/dev/null || true
+    stop_server "${SERVER_PID}"
+    SERVER_PID=""
+  fi
+  if [[ "${SERVER_STARTED}" == "1" ]]; then
+    free_port "${E2E_PORT}"
   fi
 }
-trap cleanup EXIT
+trap cleanup EXIT INT TERM
 
 if [[ "${TRT15_EXTERNAL:-${INFERENCE_TEST_EXTERNAL_SERVER:-}}" != "1" ]]; then
   if [[ -z "${TENSORRT_ROOT:-}" ]]; then
@@ -58,9 +124,10 @@ if [[ "${TRT15_EXTERNAL:-${INFERENCE_TEST_EXTERNAL_SERVER:-}}" != "1" ]]; then
   fi
 
   export LD_LIBRARY_PATH="${TENSORRT_ROOT}/lib:${LD_LIBRARY_PATH:-}"
-  E2E_PORT="${TRT15_PORT:-${INFERENCE_E2E_PORT:-50051}}"
+  free_port "${E2E_PORT}"
   "${BUILD}/trt_server" "${E2E_PORT}" "${ONNX}" &
   SERVER_PID=$!
+  SERVER_STARTED="1"
 
   WAIT_STEP_S="${TRT15_WAIT_STEP:-${INFERENCE_SERVER_WAIT_STEP_S:-5}}"
   WAIT_MAX_S="${TRT15_WAIT_MAX:-${INFERENCE_SERVER_WAIT_MAX_S:-3600}}"
@@ -72,7 +139,7 @@ if [[ "${TRT15_EXTERNAL:-${INFERENCE_TEST_EXTERNAL_SERVER:-}}" != "1" ]]; then
       echo "run_tests.sh: trt_server exited before opening ${E2E_PORT}; see logs above." >&2
       exit 1
     fi
-    if python3 -c "import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1', int('${E2E_PORT}'))); s.close()" 2>/dev/null; then
+    if port_is_open; then
       echo "trt_server is accepting connections on port ${E2E_PORT}."
       break
     fi
@@ -82,9 +149,16 @@ if [[ "${TRT15_EXTERNAL:-${INFERENCE_TEST_EXTERNAL_SERVER:-}}" != "1" ]]; then
     fi
     sleep "${WAIT_STEP_S}"
   done
+else
+  if port_is_open; then
+    echo "run_tests.sh: using external trt_server on 127.0.0.1:${E2E_PORT} (TRT15_EXTERNAL=1)." >&2
+    echo "run_tests.sh: после тестов остановите его вручную: pkill -f 'build/trt_server' или fuser -k ${E2E_PORT}/tcp" >&2
+  else
+    echo "run_tests.sh: TRT15_EXTERNAL=1, но на 127.0.0.1:${E2E_PORT} никто не слушает." >&2
+    exit 1
+  fi
 fi
 
-E2E_PORT="${TRT15_PORT:-${INFERENCE_E2E_PORT:-50051}}"
 export TRT15_E2E=1 INFERENCE_E2E=1 TRT15_BENCH=1 INFERENCE_BENCHMARK_E2E=1
 export TRT15_PORT="${E2E_PORT}" INFERENCE_E2E_PORT="${E2E_PORT}"
 "${VENV}/bin/python" -m unittest discover -s tests -v
