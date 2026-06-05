@@ -24,7 +24,6 @@ BUILD="${ROOT}/build"
 ONNX="${TASK_DIR}/resnet50.onnx"
 E2E_PORT="${TRT15_PORT:-${INFERENCE_E2E_PORT:-50051}}"
 SERVER_PID=""
-SERVER_STARTED=""
 
 port_pids() {
   local port="$1"
@@ -92,9 +91,7 @@ cleanup() {
     stop_server "${SERVER_PID}"
     SERVER_PID=""
   fi
-  if [[ "${SERVER_STARTED}" == "1" ]]; then
-    free_port "${E2E_PORT}"
-  fi
+  free_port "${E2E_PORT}"
 }
 trap cleanup EXIT INT TERM
 
@@ -127,7 +124,6 @@ if [[ "${TRT15_EXTERNAL:-${INFERENCE_TEST_EXTERNAL_SERVER:-}}" != "1" ]]; then
   free_port "${E2E_PORT}"
   "${BUILD}/trt_server" "${E2E_PORT}" "${ONNX}" &
   SERVER_PID=$!
-  SERVER_STARTED="1"
 
   WAIT_STEP_S="${TRT15_WAIT_STEP:-${INFERENCE_SERVER_WAIT_STEP_S:-5}}"
   WAIT_MAX_S="${TRT15_WAIT_MAX:-${INFERENCE_SERVER_WAIT_MAX_S:-3600}}"
@@ -150,13 +146,11 @@ if [[ "${TRT15_EXTERNAL:-${INFERENCE_TEST_EXTERNAL_SERVER:-}}" != "1" ]]; then
     sleep "${WAIT_STEP_S}"
   done
 else
-  if port_is_open; then
-    echo "run_tests.sh: using external trt_server on 127.0.0.1:${E2E_PORT} (TRT15_EXTERNAL=1)." >&2
-    echo "run_tests.sh: после тестов остановите его вручную: pkill -f 'build/trt_server' или fuser -k ${E2E_PORT}/tcp" >&2
-  else
-    echo "run_tests.sh: TRT15_EXTERNAL=1, но на 127.0.0.1:${E2E_PORT} никто не слушает." >&2
+  if ! port_is_open; then
+    echo "run_tests.sh: TRT15_EXTERNAL=1, but on 127.0.0.1:${E2E_PORT} nobody is listening." >&2
     exit 1
   fi
+  echo "run_tests.sh: used trt_server on 127.0.0.1:${E2E_PORT} (TRT15_EXTERNAL=1)." >&2
 fi
 
 export TRT15_E2E=1 INFERENCE_E2E=1 TRT15_BENCH=1 INFERENCE_BENCHMARK_E2E=1
