@@ -6,6 +6,7 @@
 #include <grpcpp/grpcpp.h>
 
 #include <algorithm>
+#include <csignal>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -145,6 +146,16 @@ class InferenceServiceImpl final
     std::mutex *mutex_;
 };
 
+namespace {
+grpc::Server *g_server = nullptr;
+
+void handleShutdownSignal(int /*signum*/) {
+    if (g_server != nullptr) {
+        g_server->Shutdown();
+    }
+}
+} // namespace
+
 void runServer(int port, const std::string &onnx_file) {
     std::cerr << "Loading engine..." << std::endl;
     auto engine = loadEngine(onnx_file);
@@ -167,7 +178,11 @@ void runServer(int port, const std::string &onnx_file) {
     }
 
     std::cerr << "gRPC InferenceService listening on " << addr << std::endl;
+    g_server = server.get();
+    std::signal(SIGINT, handleShutdownSignal);
+    std::signal(SIGTERM, handleShutdownSignal);
     server->Wait();
+    g_server = nullptr;
 }
 
 int main(int argc, char *argv[]) {
